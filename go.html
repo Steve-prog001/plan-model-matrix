@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-build="20260902-focus-fix">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>模型能力 × opencode Go 可用次数</title>
+<style>
+  :root{
+    --paper:#f7f5f1; --card:#ffffff; --ink:#16181d; --muted:#8a857c;
+    --line:#e7e2d9; --green:#16a34a; --accent:#2563eb; --gold:#d9a441;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:-apple-system,"Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1240px;margin:0 auto;padding:34px 36px 60px;}
+  /* ---- plan switcher ---- */
+  .xswitch{position:sticky;top:10px;z-index:80;display:flex;justify-content:center;margin:0 0 14px;}
+  .xswitch .xsbox{display:inline-flex;gap:4px;border:1px solid var(--line);background:rgba(255,255,255,.88);
+    backdrop-filter:blur(8px);border-radius:999px;padding:4px;box-shadow:0 4px 16px rgba(30,26,18,.10);}
+  .xswitch a{display:inline-flex;align-items:center;border-radius:999px;padding:5.5px 16px;font-size:12.5px;
+    color:#8a857c;text-decoration:none;transition:all .15s ease;}
+  .xswitch a:hover{color:#3f3b33;background:#f0ebe3;}
+  .xswitch a.on{background:#16181d;color:#fff;}
+  @media print{.xswitch{display:none}}
+
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;padding:2px 0 18px;}
+  .hero::before{content:"";position:absolute;inset:-28px -36px auto -36px;height:110px;pointer-events:none;
+    background:
+      radial-gradient(560px 190px at 12% 0%, rgba(37,99,235,.09), transparent 70%),
+      radial-gradient(520px 180px at 78% 8%, rgba(22,163,74,.10), transparent 70%);}
+  .eyebrow{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.26em;
+    color:var(--muted);text-transform:uppercase;margin-bottom:10px;animation:up .6s ease both;}
+  .eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;flex:none;
+    background:linear-gradient(135deg,#2563eb 20%,#16a34a 80%);
+    box-shadow:0 0 0 3px rgba(37,99,235,.13);}
+  h1{display:none;}
+  .sub{color:#78736a;font-size:13.5px;max-width:720px;line-height:1.7;margin:2px 0 0;animation:up .6s ease .12s both;}
+  .infoband{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+    background:linear-gradient(135deg,rgba(37,99,235,.05),rgba(22,163,74,.04));border:1px solid var(--line);
+    border-radius:14px;padding:12px 18px;animation:up .6s ease both;}
+  .ib-left{display:flex;flex-direction:column;gap:8px;min-width:0;}
+  .ib-badges{display:flex;gap:8px;flex-wrap:wrap;}
+  .ib-b{display:inline-flex;align-items:baseline;gap:5px;background:rgba(255,255,255,.75);border:1px solid var(--line);
+    border-radius:8px;padding:3px 10px;font-size:12px;color:#57534a;white-space:nowrap;}
+  .ib-b b{font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .eyebrow{margin-bottom:0;}
+  .heroabs{position:static;display:flex;gap:8px;align-items:center;animation:up .6s ease .18s both;flex:none;}
+  @media (max-width:760px){.heroabs{position:static;justify-content:flex-start;margin-top:12px;}}
+  @media (max-width:760px){.wrap{padding:20px 12px 48px;}.tablecard,.pricecard{padding:6px 12px 10px;border-radius:14px;}}
+  .meta-pill{border:1px solid var(--line);background:var(--card);border-radius:999px;
+    padding:7px 16px;font-size:13px;color:#57534a;white-space:nowrap;}
+  .langbtn{border:1px solid #cfc8ba;background:#16181d;color:#fff;border-radius:999px;
+    padding:7px 18px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .18s ease;}
+  .langbtn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(20,20,20,.25);}
+
+  /* ---------- insight cards ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin:26px 0 30px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 18px 13px;
+    box-shadow:0 2px 10px rgba(30,26,18,.04);animation:up .6s ease both;}
+  .card:nth-child(1){animation-delay:.20s;border-top:3px solid var(--green);}
+  .card:nth-child(2){animation-delay:.26s;border-top:3px solid var(--accent);}
+  .card:nth-child(3){animation-delay:.32s;border-top:3px solid #e8590c;}
+  .card:nth-child(4){animation-delay:.38s;border-top:3px solid #16181d;}
+  .card .cap{font-size:11.5px;letter-spacing:.14em;color:var(--muted);margin-bottom:7px;}
+  .card .val{font-family:Georgia,"SimSun",serif;font-size:25px;font-weight:700;line-height:1.15;}
+  .card .val small{font-size:14px;font-weight:400;color:#6d685e;margin-left:4px;}
+  .card .note{font-size:12.5px;color:#8a857c;margin-top:5px;}
+  .cardlink{cursor:pointer;transition:all .18s ease;}
+  .cardlink:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(30,26,18,.10);border-color:#cfc8ba;}
+
+  /* ---------- legend ---------- */
+  .legendbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0 18px;}
+  .pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);
+    border-radius:999px;padding:5.5px 13px;font-size:13px;color:#3f3b33;cursor:pointer;user-select:none;
+    transition:all .18s ease;}
+  .pill:hover{border-color:#cfc8ba;box-shadow:0 2px 8px rgba(30,26,18,.07);transform:translateY(-1px);}
+  .pill.off{opacity:.32;filter:saturate(.2);}
+  .lg{position:relative;overflow:visible;width:18px;height:18px;border-radius:0;display:inline-flex;align-items:center;justify-content:center;background:transparent !important;
+    align-items:center;justify-content:center;flex:none;}
+  .lg i{font-style:normal;font-size:9px;font-weight:700;line-height:1;}
+  .lg img{position:static;width:100%;height:100%;object-fit:contain;display:block;background:transparent;}
+  .lg.sm{width:14px;height:14px;} .lg.sm i{font-size:8px;}
+.lg.ok i{display:none;}
+  .lg.noimg{background:var(--lgc,#9ca3af) !important;border-radius:5px;}
+
+
+
+  .pill .pdot{width:9px;height:9px;border-radius:50%;}
+  .pill .cnt{color:#a39d90;font-size:11.5px;}
+  .reset{display:none;border:1px dashed #cfc8ba;background:transparent;border-radius:999px;
+    padding:5.5px 13px;font-size:13px;color:#8a857c;cursor:pointer;font-family:inherit;}
+  .reset.show{display:inline-flex;}
+  .legend-hint{font-size:12.5px;color:#a39d90;margin-left:6px;}
+
+  /* ---------- chart card ---------- */
+  .chartcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px 12px;
+    box-shadow:0 18px 50px rgba(25,22,15,.07);animation:up .7s ease .3s both;}
+  .chartbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 2px 14px;flex-wrap:wrap;}
+  .bar-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .bar-cap{font-size:11.5px;letter-spacing:.14em;color:var(--muted);}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper);}
+  .seg button{border:0;background:transparent;padding:6px 15px;font-size:12.5px;color:#8a857c;cursor:pointer;
+    font-family:inherit;transition:all .15s ease;}
+  .seg button.on{background:#16181d;color:#fff;}
+  .btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:6px 15px;font-size:12.5px;
+    color:#3f3b33;cursor:pointer;font-family:inherit;transition:all .18s ease;}
+  .btn:hover{border-color:#cfc8ba;box-shadow:0 2px 8px rgba(30,26,18,.08);}
+  .syncpill:empty{display:none;}
+  .syncpill{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;border:1px solid var(--line);
+    background:var(--card);border-radius:999px;padding:5px 14px;font-size:12.5px;color:#3f3b33;max-width:620px;}
+  .syncpill.busy{color:#8a857c;}
+  .syncpill.ok{border-color:#bbe7c8;background:#f0fbf3;color:#15803d;}
+  .syncpill.warn{border-color:#ecd9ae;background:#fdf6e7;color:#8a6413;}
+  .syncpill.err{border-color:#e7e2d9;background:var(--card);color:#a39d90;}
+  .syncitem{background:rgba(0,0,0,.05);border-radius:6px;padding:2px 8px;white-space:nowrap;}
+  .synctime{color:#9aa58f;font-size:11.5px;margin-left:2px;font-variant-numeric:tabular-nums;}
+  .syncbtn{border:0;background:#16181d;color:#fff;border-radius:999px;padding:4px 12px;font-size:12px;
+    cursor:pointer;font-family:inherit;margin-left:4px;}
+  .pchip{display:none;align-items:center;gap:8px;border:1px solid #ecd9ae;background:#fdf6e7;border-radius:999px;
+    padding:5px 8px 5px 13px;font-size:12.5px;color:#8a6413;}
+  .pchip.show{display:inline-flex;}
+  .pchip b{font-weight:600;}
+  .pchip button{border:0;background:#f3e4bd;color:#8a6413;width:20px;height:20px;border-radius:50%;
+    cursor:pointer;font-size:12px;line-height:1;}
+  svg{width:100%;height:auto;display:block;cursor:crosshair;}
+  circle.pt{cursor:pointer;}
+  svg text{font-family:inherit;}
+  .tick{font-size:12.5px;fill:#a39d90;}
+  .axis-t{font-size:13.5px;fill:#6d685e;letter-spacing:.05em;}
+  .lab{font-size:12.5px;fill:#3f3b33;font-weight:600;paint-order:stroke;stroke:#ffffff;stroke-width:3.5px;}
+  .qlab{font-size:13px;fill:#15803d;font-weight:700;letter-spacing:.06em;paint-order:stroke;stroke:#e8f7ee;stroke-width:4px;}
+  .ptg{transform-box:fill-box;transform-origin:center;cursor:pointer;transition:transform .16s ease;
+    animation:pop .5s cubic-bezier(.34,1.45,.5,1) both;}
+  .ptg .oring{fill:none;opacity:0;stroke:#16181d;stroke-width:2.5;transition:opacity .15s ease;pointer-events:none;}
+  .ptg.pin .oring{fill:none;opacity:1;stroke:var(--gold);stroke-width:3;}
+  .ptg:hover{transform:scale(1.22);}
+  .ptg .lg{width:18px;height:18px;box-shadow:none;background:transparent !important;}
+  .ptg .lg.noimg{background:var(--lgc,#9ca3af) !important;border-radius:5px;}
+  .ptg .lg i{font-size:9px;}
+  .ptg .logo{pointer-events:none;}
+  .frontring{fill:none;stroke:var(--gold);stroke-width:2;opacity:.85;pointer-events:none;}
+  .rev{transform-box:fill-box;transform-origin:left center;animation:revealX 1.1s cubic-bezier(.4,0,.2,1) .85s both;}
+  .fadein{animation:fadein .7s ease both;}
+  .noanim *{animation:none!important;transition:none!important;}
+  .xhair{pointer-events:none;}
+  .chipbox{fill:#16181d;}
+  .chiptxt{font-size:11.5px;fill:#fff;font-weight:600;}
+
+  /* ---------- no-score lane ---------- */
+  .nslane-cap{font-size:11.5px;fill:#a39d90;}
+  .ptg.ns .lg{width:18px;height:18px;}
+  .nsname{font-size:11.5px;fill:#6d685e;font-weight:600;paint-order:stroke;stroke:#f7f5f1;stroke-width:3px;}
+  .nsname .nsv{fill:#a39d90;font-weight:400;font-size:11px;}
+
+  /* ---------- tooltip ---------- */
+  #tt{position:fixed;display:none;pointer-events:none;z-index:60;width:262px;
+    background:#16181d;color:#f4f2ee;border-radius:13px;padding:13px 15px 14px;
+    box-shadow:0 14px 40px rgba(10,10,14,.35);font-size:12.5px;line-height:1.5;}
+  #tt .ttname{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:2px;}
+  #tt .ttname .pdot{width:9px;height:9px;border-radius:50%;flex:none;}
+  #tt .ttven{color:#9b958a;font-size:11.5px;margin-bottom:9px;}
+  #tt .row{display:flex;justify-content:space-between;margin-top:6px;}
+  #tt .row b{font-variant-numeric:tabular-nums;}
+  #tt .bar{height:4px;background:#33352f;border-radius:2px;margin-top:3px;overflow:hidden;}
+  #tt .bar i{display:block;height:100%;border-radius:2px;}
+  #tt .badges{margin-top:9px;display:flex;gap:6px;flex-wrap:wrap;}
+  #tt .bdg{font-size:10.5px;border:1px solid #4a4c44;border-radius:999px;padding:2px 9px;color:#d8d4cb;}
+  #tt .bdg.g{border-color:#2f7d4f;color:#7fd6a2;}
+  #tt .bdg.gold{border-color:#8a6413;color:#ecc978;}
+  #tt .cmp{border-top:1px dashed #4a4c44;margin-top:10px;padding-top:8px;}
+  #tt .cmp .cmp-t{font-size:10.5px;letter-spacing:.12em;color:#9b958a;margin-bottom:2px;}
+  #tt .up{color:#7fd6a2;} #tt .dn{color:#f0a08c;}
+  #tt .cmpnote{margin-top:7px;font-size:11.5px;color:#c9c4ba;}
+
+  /* ---------- table ---------- */
+  .tablecard{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-top:22px;
+    padding:6px 20px 10px;box-shadow:0 8px 30px rgba(25,22,15,.05);overflow:hidden;}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;table-layout:fixed;}
+  #tbl,#ptbl{min-width:720px;}
+  /* 统一网格：两表共用 6 列宽度，垂直扫视对齐 */
+  /* 两表共用列宽: 保证上下表列线垂直对齐 */
+
+  #tbl th:nth-child(1),#ptbl th:nth-child(1){width:440px;}
+  #tbl th:nth-child(2),#ptbl th:nth-child(2){width:145px;}
+  #tbl th:nth-child(3),#ptbl th:nth-child(3){width:130px;}
+  #tbl th:nth-child(4),#ptbl th:nth-child(4){width:145px;}
+  #tbl th:nth-child(5),#ptbl th:nth-child(5){width:145px;}
+  #tbl th:nth-child(6),#ptbl th:nth-child(6){width:105px;}
+  thead th{font-size:11px;letter-spacing:.13em;color:#a39d90;font-weight:600;text-align:center;
+    padding:10px 10px;border-bottom:1px solid var(--line);white-space:nowrap;user-select:none;}
+  thead th:first-child{text-align:left;}
+  thead th.sortable{cursor:pointer;}
+  thead th.sortable:hover{color:#6d685e;}
+  thead th .arr{color:var(--gold);font-size:10px;margin-left:3px;}
+  thead th.active-col{color:#16181d;}
+  tbody td{padding:8px 4px;border-bottom:1px solid #f1eee7;font-variant-numeric:tabular-nums;}
+  tbody tr{transition:background .12s ease;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:nth-child(even){background:#fbfaf7;}
+  tbody tr:hover,tbody tr.hl{background:#f3f7f2;}
+  tbody tr.pinrow{background:#fdf6e7!important;}
+  tbody tr.dim2{opacity:.3;}
+  .ctx{display:inline-block;font-size:11px;color:#a39d90;background:#f0ebe3;border-radius:4px;padding:1px 6px;font-variant-numeric:tabular-nums;letter-spacing:.02em;}
+.tier-sub td{border-top:none!important;padding-top:4px!important;padding-bottom:4px!important;background:#faf8f5;}
+.tier-first td{border-bottom:none!important;}
+.tier-ctx{font-size:12px;color:#6d685e;}
+.ptg.dimmed{opacity:.35!important;}
+  .ptg.dimmed .oring{opacity:0!important;}
+  tbody td:first-child{text-align:left;}
+  th.num,td.num{text-align:center;}
+  
+  td .lg{margin-right:8px;vertical-align:-3px;}
+  .mk{color:var(--green);font-weight:700;} .mkno{color:#ddd8cd;}
+  .mm-tag{color:#a39d90;font-size:11px;}
+
+  .pricecard{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-top:22px;
+    padding:6px 20px 10px;box-shadow:0 8px 30px rgba(25,22,15,.05);overflow:hidden;}
+  .tablecard,.pricecard{overflow-y:hidden;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .pricecap{font-size:11.5px;letter-spacing:.14em;color:var(--muted);margin-bottom:10px;}
+  .pc{color:#6d685e;} .pc b{color:var(--ink);font-weight:700;}
+  .pr-pill{display:inline-block;border:1px solid #cfe4d6;background:#f0fbf3;border-radius:999px;
+    padding:2px 11px;font-size:12.5px;color:#15803d;white-space:nowrap;}
+  .pr-pill.gold{border-color:#ecd9ae;background:#fdf6e7;color:#8a6413;}
+  .foot{color:#a39d90;font-size:12.5px;line-height:1.8;margin:18px 4px 0;}
+.foot a{color:#2563eb;text-decoration:none;border-bottom:1px solid rgba(37,99,235,.25);transition:border-color .15s;}
+  .foot a:hover{border-bottom-color:#2563eb;}
+  .footsynctime{color:#9aa58f;font-size:11.5px;margin-left:4px;font-variant-numeric:tabular-nums;}
+  .foot b{color:#6d685e;}
+
+  @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes pop{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}
+  @keyframes revealX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+  /* ================= POLISH LAYER (2026-09-04 visual refinement, CSS-only) ================= */
+  /* -- 圆角体系统一：卡片 16px / 控件 10px / 胶囊保持全圆 -- */
+  .chartcard,.tablecard,.pricecard{border-radius:16px;}
+  .seg,.btn{border-radius:10px;}
+
+  /* -- 4/8px 间距节奏 -- */
+  .wrap{padding:32px 36px 64px;}
+  .legendbar{gap:8px;margin:16px 0 20px;}
+  .chartcard{padding:20px 24px 16px;}
+  .chartbar{margin:0 2px 16px;}
+  .tablecard,.pricecard{margin-top:24px;padding:8px 24px 12px;}
+  thead th{padding:11px 6px 9px;}
+  tbody td{padding:9px 5px;}
+  .foot{margin:20px 4px 0;}
+
+  /* -- 字阶微调（对齐 4px 栅格） -- */
+  .card .val{font-size:24px;}
+  .card .cap{letter-spacing:.16em;}
+  .btn,.seg button{padding:7px 16px;}
+
+  /* -- 质感：双层克制阴影（贴地影 + 柔和扩散影），替代原有三种深浅 -- */
+  .chartcard{box-shadow:0 1px 2px rgba(30,26,18,.04),0 16px 40px rgba(25,22,15,.06);}
+  .tablecard,.pricecard{box-shadow:0 1px 2px rgba(30,26,18,.03),0 8px 24px rgba(25,22,15,.05);}
+
+  /* -- 交互补全：键盘焦点环 / 按压反馈 / 同步按钮 hover -- */
+  button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .btn:active,.seg button:active,.pill:active,.langbtn:active,.syncbtn:active,.reset:active{
+    transform:translateY(1px) scale(.98);}
+  .syncbtn{transition:opacity .15s ease;}
+  .syncbtn:hover{opacity:.85;}
+
+  /* -- 细节：文字选中色 -- */
+  ::selection{background:rgba(37,99,235,.16);}
+  @media (max-width:900px){#tbl,#ptbl{table-layout:fixed;width:560px;min-width:560px;}#tbl th:nth-child(1),#ptbl th:nth-child(1){width:190px;}#tbl th:nth-child(2),#ptbl th:nth-child(2){width:75px;}#tbl th:nth-child(3),#ptbl th:nth-child(3){width:65px;}#tbl th:nth-child(4),#ptbl th:nth-child(4){width:75px;}#tbl th:nth-child(5),#ptbl th:nth-child(5){width:80px;}#tbl th:nth-child(6),#ptbl th:nth-child(6){width:75px;}}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="xswitch"><span class="xsbox"><a class="" href="/plan/goat/" id="xsGoat">GOAT 计划</a><a class="on" href="/plan/go/" id="xsGo">Go 计划</a></span></div>
+  <div class="hero">
+    <div class="infoband">
+      <div class="ib-left">
+        <div class="eyebrow" id="eyebrow"></div>
+        <div class="ib-badges" id="ibBadges"></div>
+      </div>
+      <div class="heroabs">
+        <div class="meta-pill" id="metaPill"></div>
+        <button class="langbtn" id="langBtn"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="legendbar" id="legendbar"></div>
+
+  <div class="chartcard">
+    <div class="chartbar">
+      <div class="bar-l">
+        <span class="bar-cap" id="capMetric"></span>
+        <span class="seg" id="segMetric">
+          <button data-m="h5"></button><button data-m="wk"></button><button data-m="mo"></button>
+        </span>
+        <span class="bar-cap" id="capAxis"></span>
+        <span class="seg" id="segAxis">
+          <button data-m="log"></button><button data-m="lin"></button>
+        </span>
+        <span class="pchip" id="pchip"></span>
+      </div>
+      <span class="syncpill" id="sync"></span>
+      <button class="btn" id="btnExport"></button>
+    </div>
+    <div id="chart"></div>
+  </div>
+
+  <div class="tablecard">
+    <table id="tbl">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="pricecard">
+    <div class="pricecap" id="priceCap"></div>
+    <table id="ptbl"><thead id="pthead"></thead><tbody id="ptbody"></tbody>    </table>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+<div id="tt"></div>
+
+<script>
+/* ================= DATA ================= */
+const DATA = [
+{n:"Grok 4.6",mm:1,req:169,s:50.6,c:"xai",wk:423,mo:845,pr:["$2.00","$6.00","$0.50","—","$15"],tiers:[{"c": "≤ 200K", "in": "2", "out": "6", "cr": "0.5", "cw": "—"}, {"c": "> 200K", "in": "4", "out": "12", "cr": "1", "cw": "—"}]},
+{n:"GPT 5.6 Luna",mm:1,req:2050,s:43.4,c:"openai",wk:5100,mo:10250,pr:["$0.20","$1.20","$0.02","$0.25","$15"],tiers:[{"c": "≤ 272K", "in": "0.2", "out": "1.2", "cr": "0.02", "cw": "0.25"}, {"c": "> 272K", "in": "0.4", "out": "1.8", "cr": "0.04", "cw": "0.5"}]},
+{n:"GLM-5.3-Flash",mm:1,req:1580,s:46.2,c:"zai",wk:3950,mo:7900,pr:["$0.15","$0.50","$0.03","—","$15"]},
+{n:"GLM-5.3",req:220,s:48.6,c:"zai",wk:540,mo:1080,pr:["$1.40","$4.40","$0.26","—","$15"]},
+{n:"GLM-5.2",req:880,s:42.5,c:"zai",wk:2150,mo:4300,pr:["$1.40","$4.40","$0.26","—","$60"]},
+{n:"GLM-5.1",req:880,s:31.9,c:"zai",wk:2150,mo:4300,pr:["$1.40","$4.40","$0.26","—","$60"]},
+{n:"Kimi K3",mm:1,req:110,s:50.2,c:"kimi",wk:250,mo:490,pr:["$3.00","$15.00","$0.30","—","$15"]},
+{n:"Kimi K2.7 Code",mm:1,req:1350,s:33.9,c:"kimi",wk:3380,mo:6750,pr:["$0.95","$4.00","$0.19","—","$60"]},
+{n:"Kimi K2.6",req:1150,s:35.8,c:"kimi",wk:2880,mo:5750,pr:["$0.95","$4.00","$0.16","—","$60"]},
+{n:"LongCat-2.0",req:11400,s:25.8,c:"meituan",wk:28600,mo:57200,pr:["$0.30","$1.20","$0.006","—","$60"]},
+{n:"MiMo-V2.5",mm:1,req:30100,s:29.5,c:"xiaomi",wk:75200,mo:150400,pr:["$0.14","$0.28","$0.0028","—","$60"]},
+{n:"MiMo-V2.5-Pro",req:3250,s:32.6,c:"xiaomi",wk:8150,mo:16300,pr:["$0.435","$0.87","$0.003625","—","$15"]},
+{n:"MiniMax M3",mm:1,req:3200,s:35.7,c:"minimax",wk:8000,mo:16000,pr:["$0.30","$1.20","$0.06","—","$60"]},
+{n:"MiniMax M2.7",req:3400,s:30.1,c:"minimax",wk:8500,mo:17000,pr:["$0.30","$1.20","$0.06","$0.375","$60"]},
+{n:"Muse Spark 1.3 Contributor",mm:1,req:45300,s:53.0,c:"muse",wk:113300,mo:226600,pr:["$0.10","$0.20","$0.002","—","$60"]},
+{n:"Muse Spark 1.2 Contributor",mm:1,req:45300,s:46.8,c:"muse",wk:113300,mo:226600,pr:["$0.10","$0.20","$0.002","—","$60"]},
+{n:"Qwen3.8 Max",mm:1,req:160,s:46.9,c:"qwen",wk:400,mo:810,pr:["$2.00","$6.00","$0.25","$2.50","$15"]},
+{n:"Qwen3.8 Flash",mm:1,req:5400,s:45.6,c:"qwen",wk:13500,mo:27000,pr:["$0.15","$0.47","$0.016","$0.20","$30"]},
+{n:"Qwen3.7 Max",req:170,s:37.0,c:"qwen",wk:420,mo:840,pr:["$2.50","$7.50","$0.50","$3.125","$30"]},
+{n:"Qwen3.7 Plus",mm:1,req:4300,s:30.8,c:"qwen",wk:10800,mo:21600,pr:["$0.40","$1.60","$0.04","$0.50","$60"],tiers:[{"c": "≤ 256K", "in": "0.4", "out": "1.6", "cr": "0.04", "cw": "0.5"}, {"c": "> 256K", "in": "1.2", "out": "4.8", "cr": "0.12", "cw": "1.5"}]},
+{n:"Qwen3.6 Plus",mm:1,req:3300,s:31.5,c:"qwen",wk:8200,mo:16300,pr:["$0.50","$3.00","$0.05","$0.625","$60"],tiers:[{"c": "≤ 256K", "in": "0.5", "out": "3", "cr": "0.05", "cw": "0.625"}, {"c": "> 256K", "in": "2", "out": "6", "cr": "0.2", "cw": "2.5"}]},
+{n:"DeepSeek V4 Pro",req:1050,s:42.1,c:"deepseek",wk:2600,mo:5200,pr:["$0.66","$1.98","$0.022","—","$15"],tiers:[{"c": "Off-Peak", "in": "0.66", "out": "1.98", "cr": "0.022", "cw": "—"}, {"c": "Peak", "in": "1.32", "out": "3.96", "cr": "0.044", "cw": "—"}]},
+{n:"DeepSeek V4 Flash",req:7600,s:40.8,c:"deepseek",wk:18900,mo:37800,pr:["$0.22","$0.66","$0.007","—","$30"],tiers:[{"c": "Off-Peak", "in": "0.22", "out": "0.66", "cr": "0.007", "cw": "—"}, {"c": "Peak", "in": "0.44", "out": "1.32", "cr": "0.014", "cw": "—"}]},
+{n:"DeepSeek V4 Flash Vision Exp",mm:1,req:3800,s:41.5,c:"deepseek",wk:9450,mo:18900,pr:["$0.22","$0.66","$0.007","—","$15"],tiers:[{"c": "Off-Peak", "in": "0.22", "out": "0.66", "cr": "0.007", "cw": "—"}, {"c": "Peak", "in": "0.44", "out": "1.32", "cr": "0.014", "cw": "—"}]},
+{n:"Hy4 preview",req:1350,s:null,c:"tencent",wk:3380,mo:6770,pr:["$0.834","$2.501","$0.042","—","$30"]},
+{n:"Hy3",req:4300,s:33.2,c:"tencent",wk:10750,mo:21500,pr:["$0.14","$0.58","$0.035","—","$60"]}
+];
+DATA.forEach((d,i)=>d.i=i);
+const COMPANIES = {
+  xiaomi:{name:"小米 MiMo",nameEn:"Xiaomi MiMo",color:"#ea580c",aa:"xiaomi",ch:"M"},
+  deepseek:{name:"DeepSeek",color:"#2563eb",aa:"deepseek",ch:"D"},
+  muse:{name:"Meta Muse Spark",color:"#0866ff",aa:"muse",ch:"M"},
+  tencent:{name:"腾讯",nameEn:"Tencent",color:"#0d9488",aa:"tencent",ch:"T"},
+  qwen:{name:"阿里 Qwen",nameEn:"Alibaba Qwen",color:"#ff6a00",aa:"qwen",ch:"A"},
+  zai:{name:"智谱 GLM",nameEn:"Z.ai GLM",color:"#0891b2",aa:"zai",ch:"Z"},
+  openai:{name:"OpenAI",color:"#334155",aa:"openai",ch:"O"},
+  minimax:{name:"MiniMax",color:"#9f1239",aa:"minimax",ch:"M"},
+  step:{name:"阶跃 Step",nameEn:"StepFun",color:"#8b5cf6",aa:"step",ch:"S"},
+  google:{name:"Google Gemini",color:"#16a34a",aa:"google",ch:"G"},
+  kimi:{name:"Kimi",color:"#0ea5e9",aa:"kimi",ch:"K"},
+  inkling:{name:"Inkling",color:"#a21caf",aa:"inkling",ch:"I"},
+  nvidia:{name:"NVIDIA",color:"#65a30d",aa:"nvidia",ch:"N"},
+  xai:{name:"xAI Grok",color:"#4f46e5",aa:"xai",ch:"X"},
+  laguna:{name:"Poolside Laguna",color:"#6b7280",aa:"laguna",ch:"L"},
+  NEW:{name:"新加入 opencode Go",color:"#9ca3af",ch:"?"},
+  meituan:{name:"Meituan",color:"#ff5a00",aa:"meituan",ch:"M"}
+};
+const AA={
+  inkling:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjQ0IiBoZWlnaHQ9IjQ0IiByeD0iOSIgcnk9IjkiIGZpbGw9IiNmZmYiIHN0cm9rZT0iI2U2ZTJkOSIgc3Ryb2tlLXdpZHRoPSIwLjciLz48dGV4dCB4PSIyNCIgeT0iMTguOSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkludGVyLCBzeXN0ZW0tdWksIC1hcHBsZS1zeXN0ZW0sIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iNS42IiBmb250LXdlaWdodD0iODAwIiBsZXR0ZXItc3BhY2luZz0iMC4zNSIgZmlsbD0iIzBhMGEwYSI+VEhJTktJTkc8L3RleHQ+PHRleHQgeD0iMjQiIHk9IjMwLjIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJJbnRlciwgc3lzdGVtLXVpLCAtYXBwbGUtc3lzdGVtLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjUuNiIgZm9udC13ZWlnaHQ9IjgwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMzUiIGZpbGw9IiMwYTBhMGEiPk1BQ0hJTkVTPC90ZXh0Pjwvc3ZnPg==",
+  xiaomi:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSItMjAwLjAwOCAtMTk5LjcyNyA1MTIgNTEyIj4NCjxnPg0KCTxnPg0KCQk8Zz4NCgkJCTxwYXRoIGZpbGw9IiNGRjY5MDAiIGQ9Ik0yNTguNjI2LTE0Ni4yMzFjLTQ4LjMwNC00OC4xMTgtMTE3Ljc1OS01My40OTYtMjAyLjYzNC01My40OTYNCgkJCQljLTg0Ljk4MiwwLTE1NC41NDIsNS40NC0yMDIuODI2LDUzLjY4OGMtNDguMjc3LDQ4LjIyOC01My4xNzQsMTE3LjY3Ni01My4xNzQsMjAyLjU2MWMwLDg0Ljg5OSw0Ljg5NywxNTQuMzY4LDUzLjE5NCwyMDIuNjEzDQoJCQkJYzQ4LjI4MSw0OC4yNTUsMTE3LjgzMyw1My4xMzksMjAyLjgwNiw1My4xMzljODQuOTc0LDAsMTU0LjUxNC00Ljg4NCwyMDIuNzk1LTUzLjEzOQ0KCQkJCWM0OC4yOTQtNDguMjU0LDUzLjIwNS0xMTcuNzE0LDUzLjIwNS0yMDIuNjEzQzMxMS45OTItMjguNDcyLDMwNy4wMjgtOTcuOTk1LDI1OC42MjYtMTQ2LjIzMUwyNTguNjI2LTE0Ni4yMzF6Ii8+DQoJCTwvZz4NCgk8L2c+DQoJPGc+DQoJCTxnPg0KCQkJPHBhdGggZmlsbD0iI0ZGRkZGRiIgZD0iTTIwNC41NDYtNDEuMTIyYzEuNzU5LDAsMy4yMjMsMS40MTcsMy4yMjMsMy4xNjF2MTg5LjM4Ng0KCQkJCWMwLDEuNzE1LTEuNDY0LDMuMTM5LTMuMjIzLDMuMTM5SDE2My4wNWMtMS43ODEsMC0zLjIyOC0xLjQyNC0zLjIyOC0zLjEzOVYtMzcuOTYxYzAtMS43NDMsMS40NDYtMy4xNjEsMy4yMjgtMy4xNjFIMjA0LjU0NnoNCgkJCQkgTTI0LjQ2OC00MS4xMjJjMzEuMzAzLDAsNjQuMDMzLDEuNDM1LDgwLjE3NiwxNy41ODljMTUuODcxLDE1Ljg5NywxNy41OSw0Ny41NDksMTcuNjU2LDc4LjI4NnY5Ni42NzENCgkJCQljMCwxLjcxNS0xLjQ0NiwzLjEzOS0zLjIxOSwzLjEzOWgtNDEuNDljLTEuNzc3LDAtMy4yMjktMS40MjQtMy4yMjktMy4xMzlWNTMuMDljLTAuMDQ0LTE3LjE2Ny0xLjAzMS0zNC44MS05Ljg4NC00My42OTINCgkJCQljLTcuNjItNy42NDEtMjEuODM5LTkuMzkxLTM2LjYyNS05Ljc1NGgtNzUuMjFjLTEuNzY0LDAtMy4yMDgsMS40MTktMy4yMDgsMy4xMzZ2MTQ4LjY0NWMwLDEuNzE1LTEuNDYyLDMuMTM5LTMuMjM3LDMuMTM5DQoJCQkJaC00MS41MTZjLTEuNzc0LDAtMy4yMDEtMS40MjQtMy4yMDEtMy4xMzlWLTM3Ljk2MWMwLTEuNzQzLDEuNDI2LTMuMTYxLDMuMjAxLTMuMTYxSDI0LjQ2OHogTTMzLjc1NSwzNC4zMDUNCgkJCQljMS43NjYsMCwzLjIwMSwxLjQxMywzLjIwMSwzLjE0M3YxMTMuOTc3YzAsMS43MTUtMS40MzYsMy4xMzktMy4yMDEsMy4xMzlILTkuODI5Yy0xLjc5MiwwLTMuMjI4LTEuNDI0LTMuMjI4LTMuMTM5VjM3LjQ0OA0KCQkJCWMwLTEuNzMsMS40MzYtMy4xNDMsMy4yMjgtMy4xNDNIMzMuNzU1eiIvPg0KCQk8L2c+DQoJPC9nPg0KPC9nPg0KPC9zdmc+DQo=",
+  deepseek:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1Ni4xODk4IDQxLjM1OTQiPgo8cGF0aCBmaWxsPSIjNEQ2QkZFIiBkPSJNNTUuNjEyOCAzLjQ3MTE5QzU1LjAxNzUgMy4xNzk0NCA1NC43NjExIDMuNzM1MzUgNTQuNDEzIDQuMDE3ODJDNTQuMjkzOSA0LjEwODg5IDU0LjE5MzIgNC4yMjcyOSA1NC4wOTI0IDQuMzM2NjdDNTMuMjIyMyA1LjI2NTg3IDUyLjIwNTcgNS44NzY0NiA1MC44Nzc2IDUuODAzNDdDNDguOTM1OSA1LjY5NDA5IDQ3LjI3ODEgNi4zMDQ2OSA0NS44MTI2IDcuNzg5NzlDNDUuNTAxMiA1Ljk1ODUgNDQuNDY2MyA0Ljg2NDk5IDQyLjg5MDkgNC4xNjM1N0M0Mi4wNjY3IDMuNzk5MDcgNDEuMjMzMiAzLjQzNDU3IDQwLjY1NjEgMi42NDE4NUM0MC4yNTMyIDIuMDc3MTUgNDAuMTQzMiAxLjQ0ODQ5IDM5Ljk0MTggMC44Mjg4NTdDMzkuODEzNSAwLjQ1NTMyMiAzOS42ODUzIDAuMDcyNTA5OCAzOS4yNTQ4IDAuMDA4Nzg5MDZDMzguNzg3NyAtMC4wNjM5NjQ4IDM4LjYwNDUgMC4zMjc2MzcgMzguNDIxMyAwLjY1NTc2MkMzNy42ODg2IDEuOTk1MTIgMzcuNDA0NyAzLjQ3MTE5IDM3LjQzMjEgNC45NjUzM0MzNy40OTYyIDguMzI3MzkgMzguOTE1OSAxMS4wMDU5IDQxLjczNjkgMTIuOTEwMkM0Mi4wNTc1IDEzLjEyODkgNDIuMTM5OSAxMy4zNDc0IDQyLjAzOTIgMTMuNjY2NUM0MS44NDY4IDE0LjMyMjUgNDEuNjE3OCAxNC45NjAyIDQxLjQxNjQgMTUuNjE2MkM0MS4yODgxIDE2LjAzNTQgNDEuMDk1NyAxNi4xMjY1IDQwLjY0NyAxNS45NDQxQzM5LjA5OTEgMTUuMjk3NCAzNy43NjE4IDE0LjM0MDYgMzYuNTgwMyAxMy4xODM2QzM0LjU3NDUgMTEuMjQyOSAzMi43NjEgOS4xMDE4MSAzMC40OTg4IDcuNDI1MjlDMjkuOTY3NSA3LjAzMzQ1IDI5LjQzNjMgNi42NjkxOSAyOC44ODY3IDYuMzIyNzVDMjYuNTc4NiA0LjA4MTU0IDI5LjE4OSAyLjI0MDk3IDI5Ljc5MzUgMi4wMjI0NkMzMC40MjU0IDEuNzk0NjggMzAuMDEzMyAxLjAxMDk5IDI3Ljk3MDggMS4wMjAyNkMyNS45MjgzIDEuMDI5MyAyNC4wNTk5IDEuNzEyNjUgMjEuNjc4NiAyLjYyMzc4QzIxLjMzMDYgMi43NjA1IDIwLjk2NDEgMi44NjA2IDIwLjU4ODYgMi45NDI2M0MxOC40MjcxIDIuNTMyNzEgMTYuMTgzMSAyLjQ0MTQxIDEzLjgzODQgMi43MDU4MUM5LjQyMzcxIDMuMTk3NzUgNS44OTc1OCA1LjI4NDE4IDMuMzA1NTQgOC44NDY2OEMwLjE5MTQwNiAxMy4xMjg5IC0wLjU0MTI2IDE3Ljk5NDEgMC4zNTYzMjMgMjMuMDY5MUMxLjI5OTY4IDI4LjQxNzIgNC4wMjkwNSAzMi44NDUyIDguMjIzODggMzYuMzA3NkMxMi41NzQ1IDM5Ljg5NzIgMTcuNTg0NSA0MS42NTU4IDIzLjI5OTcgNDEuMzE4NkMyNi43NzEgNDEuMTE4MiAzMC42MzYxIDQwLjY1MzYgMzQuOTk1OCAzNi45NjM2QzM2LjA5NDggMzcuNTEwMyAzNy4yNDg5IDM3LjcyODggMzkuMTYzMiAzNy44OTI4QzQwLjYzNzggMzguMDI5NSA0Mi4wNTc1IDM3LjgyMDEgNDMuMTU2NSAzNy41OTIzQzQ0Ljg3ODQgMzcuMjI3OCA0NC43NTk0IDM1LjYzMzMgNDQuMTM2NiAzNS4zNDE4QzM5LjA5IDMyLjk5MTIgNDAuMTk4MSAzMy45NDc4IDM5LjE5MDcgMzMuMTczM0M0MS43NTUyIDMwLjEzOTQgNDUuNjIwNCAyNi45ODY4IDQ3LjEzMTYgMTYuNzczMkM0Ny4yNTA2IDE1Ljk2MjQgNDcuMTQ5OSAxNS40NTIxIDQ3LjEzMTYgMTQuNzk2MUM0Ny4xMjI0IDE0LjM5NTMgNDcuMjE0IDE0LjI0MDUgNDcuNjcyIDE0LjE5NDhDNDguOTM1OSAxNC4wNDkxIDUwLjE2MzIgMTMuNzAyOSA1MS4yODk4IDEzLjA4MzNDNTQuNTU5NiAxMS4yOTc2IDU1Ljg3ODQgOC4zNjM3NyA1Ni4xODk4IDQuODQ2OTJDNTYuMjM1NyA0LjMwOTMzIDU2LjE4MDcgMy43NTM0MiA1NS42MTI4IDMuNDcxMTlaTTI3LjExOSAzNS4xMjNDMjIuMjI4MSAzMS4yNzgzIDE5Ljg1NiAzMC4wMTE3IDE4Ljg3NTkgMzAuMDY2NEMxNy45NiAzMC4xMjExIDE4LjEyNDkgMzEuMTY4OSAxOC4zMjYzIDMxLjg1MjNDMTguNTM3IDMyLjUyNjQgMTguODExOCAzMi45OTEyIDE5LjE5NjQgMzMuNTgzM0MxOS40NjIgMzMuOTc1MSAxOS42NDUzIDM0LjU1ODEgMTguOTMwOSAzNC45OTU2QzE3LjM1NTUgMzUuOTcwNSAxNC42MTY5IDM0LjY2NzUgMTQuNDg4NiAzNC42MDM4QzExLjMwMTQgMzIuNzI2OCA4LjYzNjExIDMwLjI0ODUgNi43NTg0MiAyNi44NTk0QzQuOTQ0OTUgMjMuNTk3NCAzLjg5MTcyIDIwLjA5ODkgMy43MTc2NSAxNi4zNjMzQzMuNjcxODggMTUuNDYxNCAzLjkzNzUgMTUuMTQyMyA0LjgzNTA4IDE0Ljk3ODVDNi4wMTY2IDE0Ljc1OTggNy4yMzQ3NCAxNC43MTQxIDguNDE2MjYgMTQuODg3MkMxMy40MDggMTUuNjE2MiAxNy42NTc3IDE3Ljg0ODQgMjEuMjIwNiAyMS4zODM1QzIzLjI1MzkgMjMuMzk3IDI0Ljc5MjYgMjUuODAyNSAyNi4zNzcyIDI4LjE1MzFDMjguMDYyNCAzMC42NDk0IDI5Ljg3NTkgMzMuMDI3NiAzMi4xODQgMzQuOTc3M0MzMi45OTkxIDM1LjY2MDYgMzMuNjQ5NCAzNi4xNzk5IDM0LjI3MjIgMzYuNTYyN0MzMi4zOTQ3IDM2Ljc3MjIgMjkuMjYyMiAzNi44MTc5IDI3LjExOSAzNS4xMjNaTTI5LjQ2MzcgMjAuMDQ0MkMyOS40NjM3IDE5LjY0MzMgMjkuNzg0MyAxOS4zMjQ1IDMwLjE4NzQgMTkuMzI0NUMzMC4yNzg5IDE5LjMyNDUgMzAuMzYxMyAxOS4zNDI1IDMwLjQzNDYgMTkuMzY5OUMzMC41MzU0IDE5LjQwNjUgMzAuNjI3IDE5LjQ2MTIgMzAuNzAwMiAxOS41NDNDMzAuODI4NSAxOS42NzA3IDMwLjkwMTcgMTkuODUyOCAzMC45MDE3IDIwLjA0NDJDMzAuOTAxNyAyMC40NDUxIDMwLjU4MTIgMjAuNzYzOSAzMC4xNzgyIDIwLjc2MzlDMjkuNzc1MSAyMC43NjM5IDI5LjQ2MzcgMjAuNDQ1MSAyOS40NjM3IDIwLjA0NDJaTTM2Ljc0NTIgMjMuNzc5OEMzNi4yNzgxIDIzLjk3MTIgMzUuODExIDI0LjEzNSAzNS4zNjIyIDI0LjE1MzNDMzQuNjY2MSAyNC4xODk3IDMzLjkwNTkgMjMuOTA3MiAzMy40OTM4IDIzLjU2MUMzMi44NTI3IDIzLjAyMzQgMzIuMzk0NyAyMi43MjI5IDMyLjIwMjMgMjEuNzg0NEMzMi4xMTk5IDIxLjM4MzUgMzIuMTY1NiAyMC43NjM5IDMyLjIzOSAyMC40MDg3QzMyLjQwMzggMTkuNjQzMyAzMi4yMjA2IDE5LjE1MTQgMzEuNjgwMyAxOC43MDQ4QzMxLjI0MDYgMTguMzQwMyAzMC42ODE5IDE4LjI0MDIgMzAuMDY4MiAxOC4yNDAyQzI5LjgzOTIgMTguMjQwMiAyOS42Mjg3IDE4LjEzOTkgMjkuNDcyOSAxOC4wNTc5QzI5LjIxNjQgMTcuOTMwNCAyOS4wMDU5IDE3LjYxMTYgMjkuMjA3MyAxNy4yMTk3QzI5LjI3MTQgMTcuMDkyMyAyOS41ODI5IDE2Ljc4MjUgMjkuNjU2MSAxNi43Mjc4QzMwLjQ4OTYgMTYuMjUzOSAzMS40NTEzIDE2LjQwODkgMzIuMzM5NyAxNi43NjQyQzMzLjE2NDEgMTcuMTAxMyAzMy43ODY5IDE3LjcyMDkgMzQuNjg0NCAxOC41OTU1QzM1LjYwMDMgMTkuNjUyMyAzNS43NjUxIDE5Ljk0NDEgMzYuMjg3MiAyMC43MzY2QzM2LjY5OTUgMjEuMzU2MiAzNy4wNzUgMjEuOTkzOSAzNy4zMzE0IDIyLjcyMjlDMzcuNDg3MSAyMy4xNzg1IDM3LjI4NTYgMjMuNTUyIDM2Ljc0NTIgMjMuNzc5OFoiLz4KPC9zdmc+",
+  muse:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyODcuNTYgMTkxIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6IzAwODFmYjt9LmNscy0ye2ZpbGw6dXJsKCNsaW5lYXItZ3JhZGllbnQpO30uY2xzLTN7ZmlsbDp1cmwoI2xpbmVhci1ncmFkaWVudC0yKTt9PC9zdHlsZT48bGluZWFyR3JhZGllbnQgaWQ9ImxpbmVhci1ncmFkaWVudCIgeDE9IjYyLjM0IiB5MT0iMTAxLjQ1IiB4Mj0iMjYwLjM0IiB5Mj0iOTEuNDUiIGdyYWRpZW50VHJhbnNmb3JtPSJtYXRyaXgoMSwgMCwgMCwgLTEsIDAsIDE5MikiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMwMDY0ZTEiLz48c3RvcCBvZmZzZXQ9IjAuNCIgc3RvcC1jb2xvcj0iIzAwNjRlMSIvPjxzdG9wIG9mZnNldD0iMC44MyIgc3RvcC1jb2xvcj0iIzAwNzNlZSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAwODJmYiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJsaW5lYXItZ3JhZGllbnQtMiIgeDE9IjQxLjQyIiB5MT0iNTMiIHgyPSI0MS40MiIgeTI9IjEyNiIgZ3JhZGllbnRUcmFuc2Zvcm09Im1hdHJpeCgxLCAwLCAwLCAtMSwgMCwgMTkyKSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzAwODJmYiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAwNjRlMCIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTMxLjA2LDEyNmMwLDExLDIuNDEsMTkuNDEsNS41NiwyNC41MUExOSwxOSwwLDAsMCw1My4xOSwxNjBjOC4xLDAsMTUuNTEtMiwyOS43OS0yMS43NiwxMS40NC0xNS44MywyNC45Mi0zOCwzNC01MmwxNS4zNi0yMy42YzEwLjY3LTE2LjM5LDIzLTM0LjYxLDM3LjE4LTQ3QzE4MS4wNyw1LjYsMTkzLjU0LDAsMjA2LjA5LDBjMjEuMDcsMCw0MS4xNCwxMi4yMSw1Ni41LDM1LjExLDE2LjgxLDI1LjA4LDI1LDU2LjY3LDI1LDg5LjI3LDAsMTkuMzgtMy44MiwzMy42Mi0xMC4zMiw0NC44N0MyNzEsMTgwLjEzLDI1OC43MiwxOTEsMjM4LjEzLDE5MVYxNjBjMTcuNjMsMCwyMi0xNi4yLDIyLTM0Ljc0LDAtMjYuNDItNi4xNi01NS43NC0xOS43My03Ni42OS05LjYzLTE0Ljg2LTIyLjExLTIzLjk0LTM1Ljg0LTIzLjk0LTE0Ljg1LDAtMjYuOCwxMS4yLTQwLjIzLDMxLjE3LTcuMTQsMTAuNjEtMTQuNDcsMjMuNTQtMjIuNywzOC4xM2wtOS4wNiwxNmMtMTguMiwzMi4yNy0yMi44MSwzOS42Mi0zMS45MSw1MS43NUM4NC43NCwxODMsNzEuMTIsMTkxLDUzLjE5LDE5MWMtMjEuMjcsMC0zNC43Mi05LjIxLTQzLTIzLjA5QzMuMzQsMTU2LjYsMCwxNDEuNzYsMCwxMjQuODVaIi8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNMjQuNDksMzcuM0MzOC43MywxNS4zNSw1OS4yOCwwLDgyLjg1LDBjMTMuNjUsMCwyNy4yMiw0LDQxLjM5LDE1LjYxLDE1LjUsMTIuNjUsMzIsMzMuNDgsNTIuNjMsNjcuODFsNy4zOSwxMi4zMmMxNy44NCwyOS43MiwyOCw0NSwzMy45Myw1Mi4yMiw3LjY0LDkuMjYsMTMsMTIsMTkuOTQsMTIsMTcuNjMsMCwyMi0xNi4yLDIyLTM0Ljc0bDI3LjQtLjg2YzAsMTkuMzgtMy44MiwzMy42Mi0xMC4zMiw0NC44N0MyNzEsMTgwLjEzLDI1OC43MiwxOTEsMjM4LjEzLDE5MWMtMTIuOCwwLTI0LjE0LTIuNzgtMzYuNjgtMTQuNjEtOS42NC05LjA4LTIwLjkxLTI1LjIxLTI5LjU4LTM5LjcxTDE0Ni4wOCw5My42Yy0xMi45NC0yMS42Mi0yNC44MS0zNy43NC0zMS42OC00NUMxMDcsNDAuNzEsOTcuNTEsMzEuMjMsODIuMzUsMzEuMjNjLTEyLjI3LDAtMjIuNjksOC42MS0zMS40MSwyMS43OFoiLz48cGF0aCBjbGFzcz0iY2xzLTMiIGQ9Ik04Mi4zNSwzMS4yM2MtMTIuMjcsMC0yMi42OSw4LjYxLTMxLjQxLDIxLjc4QzM4LjYxLDcxLjYyLDMxLjA2LDk5LjM0LDMxLjA2LDEyNmMwLDExLDIuNDEsMTkuNDEsNS41NiwyNC41MUwxMC4xNCwxNjcuOTFDMy4zNCwxNTYuNiwwLDE0MS43NiwwLDEyNC44NSwwLDk0LjEsOC40NCw2Mi4wNSwyNC40OSwzNy4zLDM4LjczLDE1LjM1LDU5LjI4LDAsODIuODUsMFoiLz48L3N2Zz4=",
+  tencent:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGc+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIGZpbGw9IiMwMDU1RTkiPjwvY2lyY2xlPjxwYXRoIGQ9Ik0xMiAwYy41MTggMCAxLjAyOC4wMzMgMS41MjguMDk2QTYuMTg4IDYuMTg4IDAgMDExMi4xMiAxMi4yOGwtLjEyLjAwMWMtMi45OSAwLTUuMjQyIDIuMTc5LTUuNTU0IDUuMTEtLjIyMyAyLjA4Ni4zNTMgNC40MTIgMi4yNDIgNi4xNDZDMy42NzIgMjIuMSAwIDE3LjQ3OSAwIDEyIDAgNS4zNzMgNS4zNzMgMCAxMiAweiIgZmlsbD0iI0E4REZGNSI+PC9wYXRoPjxwYXRoIGQ9Ik01LjI4NiA1YTIuNDM4IDIuNDM4IDAgMDEuNjgyIDMuMzhjLTMuOTYyIDUuOTY2LTMuMjE1IDEwLjc0MyAyLjY0OCAxNS4xMzZDMy42MzYgMjIuMDU2IDAgMTcuNDUyIDAgMTJjMC0xLjc4Ny4zOS0zLjQ4MiAxLjA5LTUuMDA2LjI1My0uNDM1LjUyNS0uODcyLjgxNy0xLjMxMUEyLjQzOCAyLjQzOCAwIDAxNS4yODYgNXoiIGZpbGw9IiMwMDU1RTkiPjwvcGF0aD48cGF0aCBkPSJNMTIuOTguMDRjLjI3Mi4wMjEuNTQzLjA1My44MS4wOTMuNTgzLjEwNiAxLjExNy4yNTQgMS41MzguNDQgNi42MzggMi45MjcgOC4wNyAxMC4wNTIgMS43NDggMTUuNjQyYTQuMTI1IDQuMTI1IDAgMDEtNS44MjItLjM1OGMtMS41MS0xLjcwNi0xLjMtNC4xODQuMzU3LTUuODIyLjg1OC0uODQ4IDMuMTA4LTEuMjIzIDQuMDQ1LTIuNDQxIDEuMjU3LTEuNjM0IDIuMTIyLTYuMDA5LTIuNTIzLTcuNTA2TDEyLjk4LjAzOXoiIGZpbGw9IiMwMEJDRkYiPjwvcGF0aD48cGF0aCBkPSJNMTMuNTI4LjA5NkE2LjE4NyA2LjE4NyAwIDAxMTIgMTIuMjgxYTUuNzUgNS43NSAwIDAwLTEuNzEuMjU1Yy4xNDctLjkwNS41OTUtMS43ODQgMS4zMjEtMi41MDEuODU4LS44NDggMy4xMDgtMS4yMjMgNC4wNDUtMi40NDEgMS4yNy0xLjY1MSAyLjE0LTYuMTA0LTIuNjc2LTcuNTU0LjE4NC4wMTQuMzY3LjAzMy41NDguMDU2eiIgZmlsbD0iI0VDRUNFRSI+PC9wYXRoPjwvZz48L3N2Zz4=",
+  qwen:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPgo8ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InF3ZW4tZmlsbCIgeDE9IjEwJSIgeTE9IjkwJSIgeDI9IjkwJSIgeTI9IjEwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzRBMzVCMyI+PC9zdG9wPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzlCOEFGMiI+PC9zdG9wPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPgo8cGF0aCBkPSJNNTEyLjAxMjE2IDBjOC42NCAwIDE2LjY0IDQuNjcyIDIwLjg2NCAxMi4xNmw2Mi43MiAxMDkuNzZoMjY0Ljk2YzYuODQ4IDAgMTMuMzc2IDIuOTQ0IDE3LjkyIDhsMi45NDQgNC4xNkw5NTEuMTgwMTYgMjU2YTI0LjU3NiAyNC41NzYgMCAwIDEgMCAyNC4zMmwtNjIuNzIgMTA5LjY5NiA2OC45MjggMTIwLjc2OCA2My4zNiAxMTAuOTEyYTI0LjM4NCAyNC4zODQgMCAwIDEgMCAyNC4zMkw5NTEuMDUyMTYgNzY4YTI0LjEyOCAyNC4xMjggMCAwIDEtMjAuOTI4IDEyLjIyNGgtMTI1LjQ0bC0xMzIuNDggMjMxLjY4YTI0LjEyOCAyNC4xMjggMCAwIDEtMjAuODY0IDEyLjE2SDUxMi4wMTIxNmEyNC4xMjggMjQuMTI4IDAgMCAxLTIwLjkyOC0xMi4xNmwtNjIuNjU2LTEwOS42OTZIMTYzLjUzMjE2YTIzLjkzNiAyMy45MzYgMCAwIDEtMjAuODY0LTEyLjI4OEw3Mi45MDgxNiA3NjhhMjQuNTc2IDI0LjU3NiAwIDAgMSAwLTI0LjM4NGw2Mi43ODQtMTA5LjY5Ni0xMzIuNDgtMjMxLjY4YTI0LjY0IDI0LjY0IDAgMCAxLTIuMDQ4LTE5LjY0OGwyLjA0OC00LjczNkw3Mi45NzIxNiAyNTZhMjQuMTI4IDI0LjEyOCAwIDAgMSAyMC44NjQtMTIuMTZoMTI1LjQ0bDY5LjA1Ni0xMjAuNzY4IDYzLjM2LTExMC45MTJBMjMuOTM2IDIzLjkzNiAwIDAgMSAzNzIuNjIwMTYgMEg1MTIuMDEyMTZ6IG0xOTQuMjQgNDEzLjg4OGwtMjYyLjI3MiA0NjMuMjMyLTI3Ljg0IDAuMTI4IDgyLjg4LTE0Ni4zNjgtMTgzLjA0LTMxNi44NjQtODMuMi0xNDQuMTkyLTEzOS4yNjQgMC4yNTYgMjgwLjQ0OCA0ODUuODg4LTEzOS4yIDAuNjQtNjguOTI4IDEyMS43MjggMjc4LjA4LTEuMTUyIDY5Ljg4OCAxMjEuNzI4IDI3Ni40OC00ODguMTkyIDcwLjA4IDEyMS40NzIgMTM4Ljg4LTAuNjQtMTI2LjAxNi0yMTguMzY4LTE2Ny4wNCAwLjcwNHogbTE1Mi45Ni0yNS4wMjRsNjkuNDQtMTIxLjg1Ni01NTYuODY0IDIuMjQgNjkuMDU2LTEyMS45ODRMMzcwLjg5MjE2IDI2LjExMiAyMzMuMTAwMTYgMjY5LjI0OGwxMy41NjgtMjMuODA4IDg0LjAzMiAxNDUuNjY0TDUxMS4zNzIxNiAzOTAuNGwxODUuNi0wLjgzMiAyMy4wNC0wLjEyOCAxMzkuMi0wLjUxMiAwLjI1NiAwLjUxMi0wLjMyLTAuNjR6IiBmaWxsPSJ1cmwoI3F3ZW4tZmlsbCkiPjwvcGF0aD4KPC9zdmc+",
+  zai:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+DQogIDxwYXRoIGZpbGw9ImN1cnJlbnRDb2xvciIgZD0iTTEyLjYwNiAxLjc5NEwxMC45MjkgNC4xOTRDMTAuNjcxIDQuNTY4IDEwLjIzMiA0LjggOS43NjggNC44SDAuNjA2VjEuNzk0Wk0yNCAxLjc5NEw5LjYgMjIuMjA2SDBMMTQuNCAxLjc5NFpNMTEuMzk0IDIyLjIwNkwxMy4wODUgMTkuODA2QzEzLjM0MyAxOS40MzIgMTMuNzgyIDE5LjIgMTQuMjQ2IDE5LjJIMjMuMzk0VjIyLjIwNloiLz4NCjwvc3ZnPg==",
+  openai:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMzIwIj4NCiAgPHBhdGggZmlsbD0iY3VycmVudENvbG9yIiBkPSJtMjk3LjA2IDEzMC45N2M3LjI2LTIxLjc5IDQuNzYtNDUuNjYtNi44NS02NS40OC0xNy40Ni0zMC40LTUyLjU2LTQ2LjA0LTg2Ljg0LTM4LjY4LTE1LjI1LTE3LjE4LTM3LjE2LTI2Ljk1LTYwLjEzLTI2LjgxLTM1LjA0LS4wOC02Ni4xMyAyMi40OC03Ni45MSA1NS44Mi0yMi41MSA0LjYxLTQxLjk0IDE4LjctNTMuMzEgMzguNjctMTcuNTkgMzAuMzItMTMuNTggNjguNTQgOS45MiA5NC41NC03LjI2IDIxLjc5LTQuNzYgNDUuNjYgNi44NSA2NS40OCAxNy40NiAzMC40IDUyLjU2IDQ2LjA0IDg2Ljg0IDM4LjY4IDE1LjI0IDE3LjE4IDM3LjE2IDI2Ljk1IDYwLjEzIDI2LjggMzUuMDYuMDkgNjYuMTYtMjIuNDkgNzYuOTQtNTUuODYgMjIuNTEtNC42MSA0MS45NC0xOC43IDUzLjMxLTM4LjY3IDE3LjU3LTMwLjMyIDEzLjU1LTY4LjUxLTkuOTQtOTQuNTF6bS0xMjAuMjggMTY4LjExYy0xNC4wMy4wMi0yNy42Mi00Ljg5LTM4LjM5LTEzLjg4LjQ5LS4yNiAxLjM0LS43MyAxLjg5LTEuMDdsNjMuNzItMzYuOGMzLjI2LTEuODUgNS4yNi01LjMyIDUuMjQtOS4wN3YtODkuODNsMjYuOTMgMTUuNTVjLjI5LjE0LjQ4LjQyLjUyLjc0djc0LjM5Yy0uMDQgMzMuMDgtMjYuODMgNTkuOS01OS45MSA1OS45N3ptLTEyOC44NC01NS4wM2MtNy4wMy0xMi4xNC05LjU2LTI2LjM3LTcuMTUtNDAuMTguNDcuMjggMS4zLjc5IDEuODkgMS4xM2w2My43MiAzNi44YzMuMjMgMS44OSA3LjIzIDEuODkgMTAuNDcgMGw3Ny43OS00NC45MnYzMS4xYy4wMi4zMi0uMTMuNjMtLjM4LjgzbC02NC40MSAzNy4xOWMtMjguNjkgMTYuNTItNjUuMzMgNi43LTgxLjkyLTIxLjk1em0tMTYuNzctMTM5LjA5YzctMTIuMTYgMTguMDUtMjEuNDYgMzEuMjEtMjYuMjkgMCAuNTUtLjAzIDEuNTItLjAzIDIuMnY3My42MWMtLjAyIDMuNzQgMS45OCA3LjIxIDUuMjMgOS4wNmw3Ny43OSA0NC45MS0yNi45MyAxNS41NWMtLjI3LjE4LS42MS4yMS0uOTEuMDhsLTY0LjQyLTM3LjIyYy0yOC42My0xNi41OC0zOC40NS01My4yMS0yMS45NS04MS44OXptMjIxLjI2IDUxLjQ5LTc3Ljc5LTQ0LjkyIDI2LjkzLTE1LjU0Yy4yNy0uMTguNjEtLjIxLjkxLS4wOGw2NC40MiAzNy4xOWMyOC42OCAxNi41NyAzOC41MSA1My4yNiAyMS45NCA4MS45NC03LjAxIDEyLjE0LTE4LjA1IDIxLjQ0LTMxLjIgMjYuMjh2LTc1LjgxYy4wMy0zLjc0LTEuOTYtNy4yLTUuMi05LjA2em0yNi44LTQwLjM0Yy0uNDctLjI5LTEuMy0uNzktMS44OS0xLjEzbC02My43Mi0zNi44Yy0zLjIzLTEuODktNy4yMy0xLjg5LTEwLjQ3IDBsLTc3Ljc5IDQ0Ljkydi0zMS4xYy0uMDItLjMyLjEzLS42My4zOC0uODNsNjQuNDEtMzcuMTZjMjguNjktMTYuNTUgNjUuMzctNi43IDgxLjkxIDIyIDYuOTkgMTIuMTIgOS41MiAyNi4zMSA3LjE1IDQwLjF6bS0xNjguNTEgNTUuNDMtMjYuOTQtMTUuNTVjLS4yOS0uMTQtLjQ4LS40Mi0uNTItLjc0di03NC4zOWMuMDItMzMuMTIgMjYuODktNTkuOTYgNjAuMDEtNTkuOTQgMTQuMDEgMCAyNy41NyA0LjkyIDM4LjM0IDEzLjg4LS40OS4yNi0xLjMzLjczLTEuODkgMS4wN2wtNjMuNzIgMzYuOGMtMy4yNiAxLjg1LTUuMjYgNS4zMS01LjI0IDkuMDZsLS4wNCA4OS43OXptMTQuNjMtMzEuNTQgMzQuNjUtMjAuMDEgMzQuNjUgMjB2NDAuMDFsLTM0LjY1IDIwLTM0LjY1LTIweiIvPg0KPC9zdmc+",
+  minimax:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJtaW5pbWF4LWZpbGwiIHgxPSIwJSIgeDI9IjEwMC4xODIlIiB5MT0iNTAuMDU3JSIgeTI9IjUwLjA1NyUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNFMjE2N0UiPjwvc3RvcD48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNGRTYwM0MiPjwvc3RvcD48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cGF0aCBkPSJNMTYuMjc4IDJjMS4xNTYgMCAyLjA5My45MjcgMi4wOTMgMi4wN3YxMi41MDFhLjc0Ljc0IDAgMDAuNzQ0LjcwOS43NC43NCAwIDAwLjc0My0uNzA5VjkuMDk5YTIuMDYgMi4wNiAwIDAxMi4wNzEtMi4wNDlBMi4wNiAyLjA2IDAgMDEyNCA5LjF2Ni41NjFhLjY0OS42NDkgMCAwMS0uNjUyLjY0NS42NDkuNjQ5IDAgMDEtLjY1My0uNjQ1VjkuMWEuNzYyLjc2MiAwIDAwLS43NjYtLjc1OC43NjIuNzYyIDAgMDAtLjc2Ni43NTh2Ny40NzJhMi4wMzcgMi4wMzcgMCAwMS0yLjA0OCAyLjAyNiAyLjAzNyAyLjAzNyAwIDAxLTIuMDQ4LTIuMDI2di0xMi41YS43ODUuNzg1IDAgMDAtLjc4OC0uNzUzLjc4NS43ODUgMCAwMC0uNzg5Ljc1MmwtLjAwMSAxNS45MDRBMi4wMzcgMi4wMzcgMCAwMTEzLjQ0MSAyMmEyLjAzNyAyLjAzNyAwIDAxLTIuMDQ4LTIuMDI2VjE4LjA0YzAtLjM1Ni4yOTItLjY0NS42NTItLjY0NS4zNiAwIC42NTIuMjg5LjY1Mi42NDV2MS45MzRjMCAuMjYzLjE0Mi41MDYuMzcyLjYzOC4yMy4xMzEuNTE0LjEzMS43NDQgMGEuNzM0LjczNCAwIDAwLjM3Mi0uNjM4VjQuMDdjMC0xLjE0My45MzctMi4wNyAyLjA5My0yLjA3em0tNS42NzQgMGMxLjE1NiAwIDIuMDkzLjkyNyAyLjA5MyAyLjA3djExLjUyM2EuNjQ4LjY0OCAwIDAxLS42NTIuNjQ1LjY0OC42NDggMCAwMS0uNjUyLS42NDVWNC4wN2EuNzg1Ljc4NSAwIDAwLS43ODktLjc4Ljc4NS43ODUgMCAwMC0uNzg5Ljc4djE0LjAxM2EyLjA2IDIuMDYgMCAwMS0yLjA3IDIuMDQ4IDIuMDYgMi4wNiAwIDAxLTIuMDcxLTIuMDQ4VjkuMWEuNzYyLjc2MiAwIDAwLS43NjYtLjc1OC43NjIuNzYyIDAgMDAtLjc2Ni43NTh2My44YTIuMDYgMi4wNiAwIDAxLTIuMDcxIDIuMDQ5QTIuMDYgMi4wNiAwIDAxMCAxMi45di0xLjM3OGMwLS4zNTcuMjkyLS42NDYuNjUyLS42NDYuMzYgMCAuNjUzLjI5LjY1My42NDZWMTIuOWMwIC40MTguMzQzLjc1Ny43NjYuNzU3cy43NjYtLjMzOS43NjYtLjc1N1Y5LjA5OWEyLjA2IDIuMDYgMCAwMTIuMDctMi4wNDggMi4wNiAyLjA2IDAgMDEyLjA3MSAyLjA0OHY4Ljk4NGMwIC40MTkuMzQzLjc1OC43NjcuNzU4LjQyMyAwIC43NjYtLjMzOS43NjYtLjc1OFY0LjA3YzAtMS4xNDMuOTM3LTIuMDcgMi4wOTMtMi4wN3oiIGZpbGw9InVybCgjbWluaW1heC1maWxsKSI+PC9wYXRoPjwvc3ZnPg==",
+  step:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTIyLjAxMiAwaDEuMDMydi45MjdIMjR2Ljk2OGgtLjk1NlYzLjc4aC0xLjAzMlYxLjg5NmgtMS44Nzh2LS45N2gxLjg3OFYwek0yLjYgMTIuMzcxVjEuODdoLjk2OXYxMC41MDJoLS45N3ptMTAuNDIzLjY2aDEwLjk1di45MThoLTYuMjA4djkuNTc5aC00Ljc0MlYxMy4wM3pNNS42MjkgMy4zMzN2MTIuMzU2SDB2NC41MWgxMC4zODZWOEwyMC44NTkgOGwtLjAwMy00LjY2OC0xNS4yMjcuMDAxeiIgZmlsbD0idXJsKCNzdGVwZnVuLWZpbGwpIj48L3BhdGg+PGRlZnM+PGxpbmVhckdyYWRpZW50IGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiBpZD0ic3RlcGZ1bi1maWxsIiB4MT0iMS42NDYiIHgyPSIxOC4zNDIiIHkxPSIxLjkxNiIgeTI9IjIyLjA5MSI+PHN0b3Agc3RvcC1jb2xvcj0iIzAxQTlGRiI+PC9zdG9wPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAxNjBGRiI+PC9zdG9wPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjwvc3ZnPg==",
+  google:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHBhdGggZD0iTTU3LjA2NjcgMjguNjEwM0M1Mi4xMzU5IDI2LjQ4NzggNDcuODIxNyAyMy41NzYgNDQuMTIyMyAxOS44Nzg0QzQwLjQyNDcgMTYuMTgwOCAzNy41MTI4IDExLjg2NDkgMzUuMzkwMiA2LjkzNDJDMzQuNTc1NCA1LjA0NDQ5IDMzLjkyMDYgMy4xMDIwNCAzMy40MTg2IDEuMTEwNDlDMzMuMjU0OSAwLjQ1OTM2OCAzMi42NzExIDAuMDAxMDM3NiAzMiAwLjAwMTAzNzZDMzEuMzI4OCAwLjAwMTAzNzYgMzAuNzQ1IDAuNDU5MzY4IDMwLjU4MTMgMS4xMTA0OUMzMC4wNzkzIDMuMTAyMDQgMjkuNDI0NiA1LjA0MjY3IDI4LjYwOTcgNi45MzQyQzI2LjQ4NzIgMTEuODY0OSAyMy41NzUzIDE2LjE4MDggMTkuODc3NyAxOS44Nzg0QzE2LjE4IDIzLjU3NiAxMS44NjQgMjYuNDg3OCA2LjkzMzI3IDI4LjYxMDNDNS4wNDM1MyAyOS40MjUxIDMuMTAxMDUgMzAuMDc5OSAxLjEwOTQ3IDMwLjU4MTlDMC40NTgzMzggMzAuNzQ1NiAwIDMxLjMyOTQgMCAzMi4wMDA1QzAgMzIuNjcxNiAwLjQ1ODMzOCAzMy4yNTU1IDEuMTA5NDcgMzMuNDE5MUMzLjEwMTA1IDMzLjkyMTEgNS4wNDE3MiAzNC41NzU5IDYuOTMzMjcgMzUuMzkwN0MxMS44NjQgMzcuNTEzMiAxNi4xNzgyIDQwLjQyNTEgMTkuODc3NyA0NC4xMjI2QzIzLjU3NzEgNDcuODIwMiAyNi40ODcyIDUyLjEzNjEgMjguNjA5NyA1Ny4wNjY4QzI5LjQyNDYgNTguOTU2NSAzMC4wNzkzIDYwLjg5OSAzMC41ODEzIDYyLjg5MDVDMzAuNzQ1IDYzLjU0MTYgMzEuMzI4OCA2NCAzMiA2NEMzMi42NzExIDY0IDMzLjI1NDkgNjMuNTQxNiAzMy40MTg2IDYyLjg5MDVDMzMuOTIwNiA2MC44OTkgMzQuNTc1NCA1OC45NTgzIDM1LjM5MDIgNTcuMDY2OEMzNy41MTI4IDUyLjEzNjEgNDAuNDI0NyA0Ny44MjIgNDQuMTIyMyA0NC4xMjI2QzQ3LjgxOTkgNDAuNDI1MSA1Mi4xMzU5IDM3LjUxMzIgNTcuMDY2NyAzNS4zOTA3QzU4Ljk1NjQgMzQuNTc1OSA2MC44OTg5IDMzLjkyMTEgNjIuODkwNSAzMy40MTkxQzYzLjU0MTYgMzMuMjU1NSA2NCAzMi42NzE2IDY0IDMyLjAwMDVDNjQgMzEuMzI5NCA2My41NDE2IDMwLjc0NTYgNjIuODkwNSAzMC41ODE5QzYwLjg5ODkgMzAuMDc5OSA1OC45NTgyIDI5LjQyNTEgNTcuMDY2NyAyOC42MTAzWiIgZmlsbD0id2hpdGUiPjwvcGF0aD48bWFzayBpZD0ibWFzazAiIHN0eWxlPSJtYXNrLXR5cGU6YWxwaGEiIG1hc2tVbml0cz0idXNlclNwYWNlT25Vc2UiIHg9IjAiIHk9IjAiIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PHBhdGggZD0iTTMyIDBDMzIuNjcxMSAxLjE0NGUtMDUgMzMuMjU1MyAwLjQ1ODI2MyAzMy40MTg5IDEuMTA5MzhDMzMuOTIwOSAzLjEwMDkzIDM0LjU3NTggNS4wNDM4OSAzNS4zOTA2IDYuOTMzNTlDMzcuNTEzMSAxMS44NjM5IDQwLjQyNDcgMTYuMTc5NiA0NC4xMjIxIDE5Ljg3N0M0Ny44MjE1IDIzLjU3NDUgNTIuMTM1NyAyNi40ODY5IDU3LjA2NjQgMjguNjA5NEM1OC45NTggMjkuNDI0MiA2MC44OTkgMzAuMDc5MSA2Mi44OTA2IDMwLjU4MTFDNjMuNTQxNSAzMC43NDQ4IDYzLjk5OTggMzEuMzI4MSA2NCAzMS45OTlDNjQgMzIuNjcwMSA2My41NDE3IDMzLjI1NDIgNjIuODkwNiAzMy40MThDNjAuODk5IDMzLjkxOTkgNTguOTU2MSAzNC41NzQ4IDU3LjA2NjQgMzUuMzg5NkM1Mi4xMzU4IDM3LjUxMjEgNDcuODE5NiA0MC40MjM3IDQ0LjEyMjEgNDQuMTIxMUM0MC40MjQ2IDQ3LjgyMDQgMzcuNTEzMSA1Mi4xMzQ5IDM1LjM5MDYgNTcuMDY1NEMzNC41NzU4IDU4Ljk1NyAzMy45MjA5IDYwLjg5ODEgMzMuNDE4OSA2Mi44ODk2QzMzLjI1NTIgNjMuNTQwNyAzMi42NzExIDYzLjk5OSAzMiA2My45OTlDMzEuMzI4OSA2My45OTkgMzAuNzQ0OCA2My41NDA3IDMwLjU4MTEgNjIuODg5NkMzMC4wNzkxIDYwLjg5ODEgMjkuNDI0MiA1OC45NTUxIDI4LjYwOTQgNTcuMDY1NEMyNi40ODY5IDUyLjEzNDkgMjMuNTc3MyA0Ny44MTg2IDE5Ljg3NzkgNDQuMTIxMUMxNi4xNzg2IDQwLjQyMzcgMTEuODY0MiAzNy41MTIxIDYuOTMzNTkgMzUuMzg5NkM1LjA0MjA0IDM0LjU3NDggMy4xMDA5NiAzMy45MTk5IDEuMTA5MzggMzMuNDE4QzAuNDU4MzA5IDMzLjI1NDIgMCAzMi42NzAxIDAgMzEuOTk5QzAuMDAwMjAxNTQ4IDMxLjMyODEgMC40NTg0NjMgMzAuNzQ0OCAxLjEwOTM4IDMwLjU4MTFDMy4xMDA5NiAzMC4wNzkxIDUuMDQzODYgMjkuNDI0MiA2LjkzMzU5IDI4LjYwOTRDMTEuODY0MyAyNi40ODY5IDE2LjE4MDQgMjMuNTc0NSAxOS44Nzc5IDE5Ljg3N0MyMy41NzUzIDE2LjE3OTYgMjYuNDg2OSAxMS44NjM5IDI4LjYwOTQgNi45MzM1OUMyOS40MjQyIDUuMDQyMDcgMzAuMDc5MSAzLjEwMDkzIDMwLjU4MTEgMS4xMDkzOEMzMC43NDQ4IDAuNDU4MjYgMzEuMzI4OSAwIDMyIDBaIiBmaWxsPSJibGFjayI+PC9wYXRoPjxwYXRoIGQ9Ik0zMiAwQzMyLjY3MTEgMS4xNDRlLTA1IDMzLjI1NTMgMC40NTgyNjMgMzMuNDE4OSAxLjEwOTM4QzMzLjkyMDkgMy4xMDA5MyAzNC41NzU4IDUuMDQzODkgMzUuMzkwNiA2LjkzMzU5QzM3LjUxMzEgMTEuODYzOSA0MC40MjQ3IDE2LjE3OTYgNDQuMTIyMSAxOS44NzdDNDcuODIxNSAyMy41NzQ1IDUyLjEzNTcgMjYuNDg2OSA1Ny4wNjY0IDI4LjYwOTRDNTguOTU4IDI5LjQyNDIgNjAuODk5IDMwLjA3OTEgNjIuODkwNiAzMC41ODExQzYzLjU0MTUgMzAuNzQ0OCA2My45OTk4IDMxLjMyODEgNjQgMzEuOTk5QzY0IDMyLjY3MDEgNjMuNTQxNyAzMy4yNTQyIDYyLjg5MDYgMzMuNDE4QzYwLjg5OSAzMy45MTk5IDU4Ljk1NjEgMzQuNTc0OCA1Ny4wNjY0IDM1LjM4OTZDNTIuMTM1OCAzNy41MTIxIDQ3LjgxOTYgNDAuNDIzNyA0NC4xMjIxIDQ0LjEyMTFDNDAuNDI0NiA0Ny44MjA0IDM3LjUxMzEgNTIuMTM0OSAzNS4zOTA2IDU3LjA2NTRDMzQuNTc1OCA1OC45NTcgMzMuOTIwOSA2MC44OTgxIDMzLjQxODkgNjIuODg5NkMzMy4yNTUyIDYzLjU0MDcgMzIuNjcxMSA2My45OTkgMzIgNjMuOTk5QzMxLjMyODkgNjMuOTk5IDMwLjc0NDggNjMuNTQwNyAzMC41ODExIDYyLjg4OTZDMzAuMDc5MSA2MC44OTgxIDI5LjQyNDIgNTguOTU1MSAyOC42MDk0IDU3LjA2NTRDMjYuNDg2OSA1Mi4xMzQ5IDIzLjU3NzMgNDcuODE4NiAxOS44Nzc5IDQ0LjEyMTFDMTYuMTc4NiA0MC40MjM3IDExLjg2NDIgMzcuNTEyMSA2LjkzMzU5IDM1LjM4OTZDNS4wNDIwNCAzNC41NzQ4IDMuMTAwOTYgMzMuOTE5OSAxLjEwOTM4IDMzLjQxOEMwLjQ1ODMwOSAzMy4yNTQyIDAgMzIuNjcwMSAwIDMxLjk5OUMwLjAwMDIwMTU0OCAzMS4zMjgxIDAuNDU4NDYzIDMwLjc0NDggMS4xMDkzOCAzMC41ODExQzMuMTAwOTYgMzAuMDc5MSA1LjA0Mzg2IDI5LjQyNDIgNi45MzM1OSAyOC42MDk0QzExLjg2NDMgMjYuNDg2OSAxNi4xODA0IDIzLjU3NDUgMTkuODc3OSAxOS44NzdDMjMuNTc1MyAxNi4xNzk2IDI2LjQ4NjkgMTEuODYzOSAyOC42MDk0IDYuOTMzNTlDMjkuNDI0MiA1LjA0MjA3IDMwLjA3OTEgMy4xMDA5MyAzMC41ODExIDEuMTA5MzhDMzAuNzQ0OCAwLjQ1ODI2IDMxLjMyODkgMCAzMiAwWiIgZmlsbD0idXJsKCNwYWludDBfbGluZWFyKSI+PC9wYXRoPjwvbWFzaz48ZyBtYXNrPSJ1cmwoI21hc2swKSI+PGcgZmlsdGVyPSJ1cmwoI2ZpbHRlcjBfZikiPjxlbGxpcHNlIGN4PSIxNC4yMDg0IiBjeT0iMTYuNzE2NCIgcng9IjE0LjIwODQiIHJ5PSIxNi43MTY0IiB0cmFuc2Zvcm09Im1hdHJpeCgwLjk0MjM0MyAwLjMzNDY0OSAtMC4zMzQ2NTYgMC45NDIzNCAtNy45NzkgMTMuNzczNSkiIGZpbGw9IiNGRkU0MzIiLz48L2c+PGcgZmlsdGVyPSJ1cmwoI2ZpbHRlcjFfZikiPjxlbGxpcHNlIGN4PSIyNy4wNTQzIiBjeT0iMi41NTExNCIgcng9IjE4LjM5NDQiIHJ5PSIxOC43OTg1IiBmaWxsPSIjRkM0MTNEIi8+PC9nPjxnIGZpbHRlcj0idXJsKCNmaWx0ZXIyX2YpIj48ZWxsaXBzZSBjeD0iMTkuMjI0NSIgY3k9IjI0LjkwNDIiIHJ4PSIxOS4yMjQ1IiByeT0iMjQuOTA0MiIgdHJhbnNmb3JtPSJtYXRyaXgoMC45OTg4MDcgLTAuMDQ4ODI1NCAwLjA0ODgyNjYgMC45OTg4MDcgLTEuNzI3NzggMzIuNjU3MykiIGZpbGw9IiMwMEI5NUMiLz48L2c+PGcgZmlsdGVyPSJ1cmwoI2ZpbHRlcjNfZikiPjxlbGxpcHNlIGN4PSIxOS4yMjQ1IiBjeT0iMjQuOTA0MiIgcng9IjE5LjIyNDUiIHJ5PSIyNC45MDQyIiB0cmFuc2Zvcm09Im1hdHJpeCgwLjk5ODgwNyAtMC4wNDg4MjU0IDAuMDQ4ODI2NiAwLjk5ODgwNyAtMS43Mjc3OCAzMi42NTczKSIgZmlsbD0iIzAwQjk1QyIvPjwvZz48ZyBmaWx0ZXI9InVybCgjZmlsdGVyNF9mKSI+PGVsbGlwc2UgY3g9IjE4Ljg0MjkiIGN5PSIyMC43NDQxIiByeD0iMTguODQyOSIgcnk9IjIwLjc0NDEiIHRyYW5zZm9ybT0ibWF0cml4KDAuODU0MzAxIC0wLjUxOTc3OSAwLjUxOTc5IDAuODU0Mjk0IC03LjEzNTc0IDQ3LjUwNzgpIiBmaWxsPSIjMDBCOTVDIi8+PC9nPjxnIGZpbHRlcj0idXJsKCNmaWx0ZXI1X2YpIj48ZWxsaXBzZSBjeD0iNjYuNDYxNyIgY3k9IjI0Ljk3NyIgcng9IjE4LjA5MzMiIHJ5PSIxNy40MjI5IiBmaWxsPSIjMzE4NkZGIi8+PC9nPjxnIGZpbHRlcj0idXJsKCNmaWx0ZXI2X2YpIj48ZWxsaXBzZSBjeD0iMjAuOTI5MiIgY3k9IjIyLjA3NTIiIHJ4PSIyMC45MjkyIiByeT0iMjIuMDc1MiIgdHJhbnNmb3JtPSJtYXRyaXgoMC43OTU5OSAwLjYwNTMxIC0wLjYwNTMyIDAuNzk1OTgyIC0yLjgxODg1IC03LjQzMzIzKSIgZmlsbD0iI0ZCQkMwNCIvPjwvZz48ZyBmaWx0ZXI9InVybCgjZmlsdGVyN19mKSI+PGVsbGlwc2UgY3g9IjI0LjEzMTEiIGN5PSIyMi4yOTE5IiByeD0iMjQuMTMxMSIgcnk9IjIyLjI5MTkiIHRyYW5zZm9ybT0ibWF0cml4KDAuODI0MDM3IDAuNTY2NTM2IC0wLjU2NjU0NiAwLjgyNDAzIDM5LjYzMzggMC4zMTA2MDgpIiBmaWxsPSIjMzE4NkZGIi8+PC9nPjxnIGZpbHRlcj0idXJsKCNmaWx0ZXI4X2YpIj48cGF0aCBkPSJNNTQuMjI1NSAtMi4zMDQwM0M1Ny4wMTk1IDEuNDk0NjIgNTMuNDI5NCA4Ljg4MDQgNDYuMjA2OCAxNC4xOTI2QzM4Ljk4NDIgMTkuNTA0OCAzMC44NjQyIDIwLjczMTggMjguMDcwMiAxNi45MzMxQzI1LjI3NjIgMTMuMTM0NSAyOC44NjYzIDUuNzQ4NjcgMzYuMDg4OSAwLjQzNjQ4NkM0My4zMTE1IC00Ljg3NTcgNTEuNDMxNSAtNi4xMDI2NyA1NC4yMjU1IC0yLjMwNDAzWiIgZmlsbD0iIzc0OUJGRiI+PC9wYXRoPjwvZz48ZyBmaWx0ZXI9InVybCgjZmlsdGVyOV9mKSI+PGVsbGlwc2UgY3g9IjI3LjU4NTMiIGN5PSIxNy4xNDc4IiByeD0iMjcuNTg1MyIgcnk9IjE3LjE0NzgiIHRyYW5zZm9ybT0ibWF0cml4KDAuNzMzMTY2IC0wLjY4MDA0OSAwLjY4MDA2MSAwLjczMzE1NSAtMTIuMjU4MyA5LjQ5Njk1KSIgZmlsbD0iI0ZDNDEzRCIvPjwvZz48ZyBmaWx0ZXI9InVybCgjZmlsdGVyMTBfZikiPjxlbGxpcHNlIGN4PSIxNC43ODE5IiBjeT0iOC41OTYzNyIgcng9IjE0Ljc4MTkiIHJ5PSI4LjU5NjM3IiB0cmFuc2Zvcm09Im1hdHJpeCgwLjgxMzE4NiAwLjU4MjAwNCAtMC41ODIwMTYgMC44MTMxNzcgNi4zNzg0MiAzMC41MTEpIiBmaWxsPSIjRkZFRTQ4Ii8+PC9nPjwvZz48ZGVmcz48ZmlsdGVyIGlkPSJmaWx0ZXIwX2YiIHg9Ii0xOS42MTgiIHk9IjEyLjkwMjciIHdpZHRoPSIzOC44NjgxIiBoZWlnaHQ9IjQyLjc1NjIiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj48ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSIyLjQ1OTY1Ii8+PC9maWx0ZXI+PGZpbHRlciBpZD0iZmlsdGVyMV9mIiB4PSItMTUuMTIyMyIgeT0iLTQwLjAyOTYiIHdpZHRoPSI4NC4zNTMzIiBoZWlnaHQ9Ijg1LjE2MTUiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj48ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSIxMS44OTExIi8+PC9maWx0ZXI+PGZpbHRlciBpZD0iZmlsdGVyMl9mIiB4PSItMjAuNzY4MiIgeT0iMTEuNDgzNSIgd2lkdGg9Ijc4LjkxNjEiIGhlaWdodD0iOTAuMjE5NiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBjb2xvci1pbnRlcnBvbGF0aW9uLWZpbHRlcnM9InNSR0IiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjEwLjEwODYiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJmaWx0ZXIzX2YiIHg9Ii0yMC43NjgyIiB5PSIxMS40ODM1IiB3aWR0aD0iNzguOTE2MSIgaGVpZ2h0PSI5MC4yMTk2IiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiI+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMTAuMTA4NiIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImZpbHRlcjRfZiIgeD0iLTE5Ljg1IiB5PSIxNC45NjY0IiB3aWR0aD0iNzkuMTg4NiIgaGVpZ2h0PSI4MC45Mzc4IiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiI+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMTAuMTA4NiIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImZpbHRlcjVfZiIgeD0iMjkuMTU2MSIgeT0iLTExLjY1ODIiIHdpZHRoPSI3NC42MTExIiBoZWlnaHQ9IjczLjI3MDMiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj48ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSI5LjYwNjEzIi8+PC9maWx0ZXI+PGZpbHRlciBpZD0iZmlsdGVyNl9mIiB4PSItMzguMjkxIiB5PSItMTYuMjY4NyIgd2lkdGg9Ijc3LjUzOCIgaGVpZ2h0PSI3OC4xNTEzIiBmaWx0ZXJVbml0cz0idXNlclNwYWNlT25Vc2UiIGNvbG9yLWludGVycG9sYXRpb24tZmlsdGVycz0ic1JHQiI+PGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iOC43MDU5MSIvPjwvZmlsdGVyPjxmaWx0ZXIgaWQ9ImZpbHRlcjdfZiIgeD0iNy43ODAzOCIgeT0iLTYuMDk4MSIgd2lkdGg9Ijc4LjIxODEiIGhlaWdodD0iNzYuODk4MiIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBjb2xvci1pbnRlcnBvbGF0aW9uLWZpbHRlcnM9InNSR0IiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjcuNzc0NzMiLz48L2ZpbHRlcj48ZmlsdGVyIGlkPSJmaWx0ZXI4X2YiIHg9IjEzLjIwODIiIHk9Ii0xOC40MjUiIHdpZHRoPSI1NS44NzkzIiBoZWlnaHQ9IjUxLjQ3OTEiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj48ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSI2Ljk1Njk0Ii8+PC9maWx0ZXI+PGZpbHRlciBpZD0iZmlsdGVyOV9mIiB4PSItMTUuNDczOSIgeT0iLTMxLjAyNzIiIHdpZHRoPSI3MC4yMDM0IiBoZWlnaHQ9IjY4LjY3MzUiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj48ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSI1Ljg3NTk4Ii8+PC9maWx0ZXI+PGZpbHRlciBpZD0iZmlsdGVyMTBfZiIgeD0iLTE0LjE3MyIgeT0iMjAuNDc0IiB3aWR0aD0iNTUuMTM3MyIgaGVpZ2h0PSI1MS4yNjEiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj48ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSI3LjI3MjUzIi8+PC9maWx0ZXI+PGxpbmVhckdyYWRpZW50IGlkPSJwYWludDBfbGluZWFyIiB4MT0iMTguMTkzMSIgeTE9IjQyLjgyMSIgeDI9IjUxLjQzMzUiIHkyPSIxNC43OTU5IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agc3RvcC1jb2xvcj0iIzQ4OTNGQyIvPjxzdG9wIG9mZnNldD0iMC4yNyIgc3RvcC1jb2xvcj0iIzQ4OTNGQyIvPjxzdG9wIG9mZnNldD0iMC43NzY5ODEiIHN0b3AtY29sb3I9IiM5NjlERkYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNCRDk5RkUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48L3N2Zz4=",
+  kimi:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMC41IDI0IDI0Ij4NCiAgPHBhdGggZmlsbD0iIzE3ODNGRiIgZD0iTTIxLjcyIDAuOTRDMjIuOTUgMC45NCAyMy45NSAxLjk0IDIzLjk1IDMuMTdDMjMuOTUgNC40IDIyLjk1IDUuNCAyMS43MiA1LjRIMTkuNzVDMTkuNiA1LjQgMTkuNDkgNS4yOCAxOS40OSA1LjE0VjMuMTdDMTkuNDkgMS45NCAyMC40OSAwLjk0IDIxLjcyIDAuOTRaIi8+DQogIDxwYXRoIGZpbGw9ImN1cnJlbnRDb2xvciIgZD0iTTkuMzkgMTMuOTVMMTcuODIgNS41OUMxNy45OCA1LjQzIDE3Ljg5IDUuMTIgMTcuNjggNS4xMkgxMy4xNEMxMy4xNCA1LjEyIDEzLjA0IDUuMTQgMTMgNS4xOEwzLjkyIDE0LjE5QzMuNzggMTQuMzMgMy41NyAxNC4yMSAzLjU3IDEzLjk4VjUuMzlDMy41NyA1LjI0IDMuNDcgNS4xMiAzLjM1IDUuMTJIMC4yMkMwLjEgNS4xMiAwIDUuMjQgMCA1LjM5VjIzLjkyQzAgMjQuMDcgMC4xIDI0LjE5IDAuMjIgMjQuMTlIMy4zNUMzLjQ3IDI0LjE5IDMuNTcgMjQuMDcgMy41NyAyMy45MlYyMC4xNEMzLjU3IDIwLjA2IDMuNiAxOS45OCAzLjY1IDE5LjkzTDYuNDcgMTcuMTRDNi41NCAxNy4wNyA2LjYzIDE3LjA2IDYuNzEgMTcuMTFMMTQuMjQgMjIuNjVDMTUuNDcgMjMuNDggMTYuODUgMjMuOTkgMTguMjUgMjQuMTRDMTguMzcgMjQuMTUgMTguNDggMjQuMDMgMTguNDggMjMuODdWMjAuMzFDMTguNDggMjAuMTcgMTguNCAyMC4wNiAxOC4yOSAyMC4wNUMxNy40NyAxOS45MiAxNi42NiAxOS42IDE1Ljk0IDE5LjExTDkuNDIgMTQuMzlDOS4yOCAxNC4zIDkuMjcgMTQuMDcgOS4zOSAxMy45NVoiLz4NCjwvc3ZnPg==",
+  nvidia:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEwLjIxMiA4Ljk3NlY3LjYyYy4xMjctLjAxLjI1Ni0uMDE3LjM4OC0uMDIxIDMuNTk2LS4xMTcgNS45NTcgMy4xODQgNS45NTcgMy4xODRzLTIuNTQ4IDMuNjQ3LTUuMjgyIDMuNjQ3YTMuMjI3IDMuMjI3IDAgMDEtMS4wNjMtLjE3NXYtNC4xMDljMS40LjE3NCAxLjY4MS44MTIgMi41MjMgMi4yNThsMS44NzMtMS42MjdhNC45MDUgNC45MDUgMCAwMC0zLjY3LTEuODQ2IDYuNTk0IDYuNTk0IDAgMDAtLjcyOS4wNDRtMC00LjQ3NnYyLjAyNWMuMTMtLjAxLjI1OS0uMDE5LjM4OC0uMDI0IDUuMDAyLS4xNzQgOC4yNjEgNC4yMjYgOC4yNjEgNC4yMjZzLTMuNzQzIDQuNjktNy42NDMgNC42OWMtLjMzOCAwLS42NzUtLjAzMS0xLjAwNy0uMDkydjEuMjVjLjI3OC4wMzguNTU4LjA1Ny44MzguMDU3IDMuNjI5IDAgNi4yNTMtMS45MSA4Ljc5NC00LjE2OS40MjEuMzQ3IDIuMTQ2IDEuMTkzIDIuNTAxIDEuNTY0LTIuNDE2IDIuMDgzLTguMDQ4IDMuNzYzLTExLjI0IDMuNzYzLS4zMDggMC0uNjAzLS4wMi0uODk0LS4wNDhWMTkuNUgyNHYtMTVIMTAuMjF6bTAgOS43NTZ2MS4wNjhjLTMuMzU2LS42MTYtNC4yODctNC4yMS00LjI4Ny00LjIxYTcuMTczIDcuMTczIDAgMDE0LjI4Ny0yLjEzOHYxLjE3MmgtLjAwNWEzLjE4MiAzLjE4MiAwIDAwLTIuNTAyIDEuMTc4cy42MTUgMi4yNzYgMi41MDcgMi45MzFtLTUuOTYxLTMuM2MxLjQzNi0xLjkzNSAzLjYwNC0zLjE0OCA1Ljk2MS0zLjMzNlY2LjUyM0M1LjgxIDYuODg3IDIgMTAuNzIzIDIgMTAuNzIzczIuMTU4IDYuNDI3IDguMjEgNy4wMTV2LTEuMTY2QzUuNzcgMTYgNC4yNSAxMC45NTggNC4yNSAxMC45NThoLS4wMDJ6IiBmaWxsPSIjNzRCNzFCIi8+PC9zdmc+",
+  xai:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+DQogIDxwYXRoIGZpbGw9ImN1cnJlbnRDb2xvciIgZD0iTTkuMjcgMTUuMjlsNy45NzgtNS44OTdjLjM5MS0uMjkuOTUtLjE3NyAxLjEzNy4yNzIuOTggMi4zNjkuNTQyIDUuMjE1LTEuNDEgNy4xNjktMS45NTEgMS45NTQtNC42NjcgMi4zODItNy4xNDkgMS40MDZsLTIuNzExIDEuMjU3YzMuODg5IDIuNjYxIDguNjExIDIuMDAzIDExLjU2Mi0uOTUzIDIuMzQxLTIuMzQ0IDMuMDY2LTUuNTM5IDIuMzg4LTguNDJsLjAwNi4wMDdjLS45ODMtNC4yMzIuMjQyLTUuOTI0IDIuNzUtOS4zODMuMDYtLjA4Mi4xMi0uMTY0LjE3OS0uMjQ4bC0zLjMwMSAzLjMwNXYtLjAxTDkuMjY3IDE1LjI5Mk03LjYyMyAxNi43MjNjLTIuNzkyLTIuNjctMi4zMS02LjgwMS4wNzEtOS4xODQgMS43NjEtMS43NjMgNC42NDctMi40ODMgNy4xNjYtMS40MjVsMi43MDUtMS4yNWE3LjgwOCA3LjgwOCAwIDAwLTEuODI5LTFBOC45NzUgOC45NzUgMCAwMDUuOTg0IDUuODNjLTIuNTMzIDIuNTM2LTMuMzMgNi40MzYtMS45NjIgOS43NjQgMS4wMjIgMi40ODctLjY1MyA0LjI0Ni0yLjM0IDYuMDIyLS41OTkuNjMtMS4xOTkgMS4yNTktMS42ODIgMS45MjVsNy42Mi02LjgxNSIvPg0KPC9zdmc+",
+  meituan:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA2NyI+CjxzdHlsZT4KICAuc3QwIHsgZmlsbDogIzUzNjQ3MTsgfQogIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgIC5zdDAgeyBmaWxsOiAjRjdGOUY5OyB9CiAgfQo8L3N0eWxlPgo8cGF0aCBkPSJNMi42MjYxNSA2Ni45OTk2QzEuMzA1MDkgNjYuOTk5NiAwLjM0Njk1MiA2NS43NDE1IDAuNjk4MDk5IDY0LjQ2NzlMMTcuNTY2IDMuMjkxNEMxOC4yODcgMC42NzYyMTggMjEuMzQ3IC0wLjQ3NzkyMiAyMy42MTU1IDEuMDA5NjRMNDUuODEwNCAxNS41NjM3QzQ3LjE0MDQgMTYuNDM1OCA0OC44NjA2IDE2LjQzNzIgNTAuMTkyIDE1LjU2NzFMNzIuNDgxIDEuMDAxNjZDNzQuNzUxNiAtMC40ODIxMDkgNzcuODA5MiAwLjY3NjI5OCA3OC41MjY3IDMuMjkyMDdMOTUuMzA2NCA2NC40NzA1Qzk1LjY1NTUgNjUuNzQzNSA5NC42OTc2IDY2Ljk5OTYgOTMuMzc3NiA2Ni45OTk2SDcxLjk1NDRDNzUuODU0MyA2Mi40ODQxIDc4LjAwMDEgNTYuNzE2NyA3OC4wMDAxIDUwLjc1MDJWNTAuMDUzOUM3OC4wMDAxIDQ0LjIxNzggNzUuODc3MSAzOC41ODA5IDcyLjAyNzMgMzQuMTk0Nkw2OS4yNzc5IDIwLjM5NDNDNjkuMTE2NCAxOS41ODM1IDY4LjQwNDcgMTguOTk5NiA2Ny41Nzc5IDE4Ljk5OTZDNjcuMjAyOCAxOC45OTk2IDY2LjgzNzkgMTkuMTIxMiA2Ni41Mzc4IDE5LjM0NjJMNTYuMTcxOSAyNy4xMjA3QzU1LjQzMzcgMjcuNjc0MyA1NC40Nzg5IDI3Ljg1MDcgNTMuNTkxNiAyNy41OTcxQzQ5LjkzNyAyNi41NTMgNDYuMDYzMSAyNi41NTMgNDIuNDA4NSAyNy41OTcxQzQxLjUyMTIgMjcuODUwNyA0MC41NjY0IDI3LjY3NDMgMzkuODI4MiAyNy4xMjA3TDI5LjQ1NzcgMTkuMzQyOEMyOS4xNjA3IDE5LjEyIDI4Ljc5OTMgMTguOTk5NiAyOC40MjggMTguOTk5NkMyNy42MDA1IDE4Ljk5OTYgMjYuODkwOCAxOS41OSAyNi43NDAzIDIwLjQwMzZMMjQuMDcyOSAzNC44MjQxQzIwLjE4MSAzOC43ODE3IDE4LjAwMDEgNDQuMTEwMSAxOC4wMDAxIDQ5LjY2MDdWNTAuOTc5OEMxOC4wMDAxIDU2LjgwMDIgMjAuMDgyMiA2Mi40Mjg3IDIzLjg3IDY2Ljg0NzlMMjQuMDAwMSA2Ni45OTk2SDIuNjI2MTVaIiBmaWxsPSIjMjlFMTU0Ii8+CjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0zNyA1NUg0M1Y0MUgzNy45MDkxTDM3IDU1Wk01OSA1NUg1M1Y0MUg1OC4wOTA5TDU5IDU1WiIvPgo8L3N2Zz4K",
+  laguna:"data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0zNS45NTkgMTIxLjUyNkMyNC4wODE4IDExNS43MzIgMTQuNDM0MSAxMDYuNTc5IDguMDUwNjYgOTUuMDU3NEMxLjgxNDczIDgzLjc5OTIgLTAuODc5NDMyIDcxLjEgMC4yNTE4MjggNTguMzMwOUMwLjUwNzk1MiA1NS40Njk0IDMuMDI4ODYgNTMuMzU2OCA1Ljg5MTU2IDUzLjYwOTVDOC43NDg5IDUzLjg2NCAxMC44NjQ5IDU2LjM4NzMgMTAuNjEyMyA1OS4yNTA1QzkuNjY0NTEgNjkuOTQ2IDExLjkyNTEgODAuNTg2NyAxNy4xNTAzIDkwLjAyMUMyMS42NDg4IDk4LjE0MzkgMjguMDkyIDEwNC44NjEgMzUuOTU2NCAxMDkuNjc3TDYwLjQxNyA1OS41MTM3QzUwLjg0MjYgNTYuMzI0OSA0Mi44Njc4IDU3LjcxMyA0Mi4xNTAxIDU3Ljg1MjRDNDIuMDQ0OCA1Ny44NzY3IDQxLjk0MyA1Ny44OTM4IDQxLjgzOTUgNTcuOTE0NUMzOS40NTU0IDU4LjMxMzcgMzcuMTQ5NCA1Ny4wMTA3IDM2LjIyMTEgNTQuODQ0M0MzNC45NCA1Mi40NTI0IDMxLjA5MzYgNDYuNjA1OSAyNi40MzgzIDQ0LjMzNDlDMjEuNzgzMSA0Mi4wNjM4IDE0LjYwODUgNDIuNzk2NCAxMi4yOTg5IDQzLjI5ODZDMTAuMzUxNSA0My43MjM4IDguMzI0ODggNDIuOTk3NyA3LjA5NDg1IDQxLjQzMTlDNS44NjQ4MiAzOS44NjYgNS42MjkwNSAzNy43MzA0IDYuNTAyMTUgMzUuOTM5OUMyMS45NTk5IDQuMjIxMTggNjAuMzQ3OSAtOC45OTg1OSA5Mi4wNjE0IDYuNDcyNjZDMTIzLjc3NSAyMS45NDM5IDEzNi45ODEgNjAuMzAyNSAxMjEuNTUgOTIuMDEyQzEyMS41MzQgOTIuMDQ0MyAxMjEuNTE4IDkyLjA3NjcgMTIxLjUwMSA5Mi4xMTI2QzEwNi4wMTYgMTIzLjc5NiA2Ny42NTgxIDEzNi45OSAzNS45NTkgMTIxLjUyNlpNNjkuNzU5OSA2NC4wNzE2TDQ1LjMwMTEgMTE0LjIzMUM2OS45ODc0IDEyMy40NTMgOTguMDc4NCAxMTMuMjA3IDExMC45MjQgODkuOTIxM0MxMDkuMTE4IDg3LjEyNjYgMTA1Ljk1IDgzLjExOTkgMTAyLjI4MyA4MS4zMzExQzk3LjU0NTUgNzkuMDE5NyA5MC42MDM3IDc5Ljc3NjggODguMjE4OSA4MC4yNzc5Qzg3LjgyNjMgODAuMzcxMiA4Ny40MzUgODAuNDE2MiA4Ny4wNDE2IDgwLjQyMDFDODYuMzM2OCA4MC40MjM1IDg1LjYyMTcgODAuMjgzOCA4NC45MzU1IDc5Ljk4NDZDODQuMjI0MSA3OS42NzMyIDgzLjU4MDggNzkuMjAzNiA4My4wNjE1IDc4LjU5ODZDODIuNzY0NyA3OC4yNDkxIDgyLjUxOTQgNzcuODY2OSA4Mi4zMjIyIDc3LjQ1OTFDODIuMTY4OSA3Ny4xNTI5IDc4LjM3NTYgNjkuNzkyNCA2OS43NTYzIDY0LjA2OThMNjkuNzU5OSA2NC4wNzE2Wk0zMC45OTQ4IDM0Ljk4MTRDMzQuOTc3OSAzNi45MjQ1IDM4LjIxOTIgNDAuMDE0NiA0MC42NDMxIDQyLjkyODRDNDguMTM5MSAzMS40NjE4IDU4LjMxMTkgMjIuODAwOSA2Ni4xNzAxIDE3LjIxNjhDNjkuMDkwMiAxNS4xNDMyIDcyLjExMzcgMTMuMjA0NSA3NS4wMjUzIDExLjUzMTZDNTQuNTcxNiA3LjIzNjkzIDMzLjEzNSAxNS4zNDMxIDIwLjcwNTYgMzIuNDA5OEMyMy45OTU1IDMyLjYzNSAyNy42MjY1IDMzLjMzODIgMzAuOTk0OCAzNC45ODE0Wk05OC41NjYgMjMuMDIwM0M5OS4wNDA3IDI2LjM0NTEgOTkuMzc2NSAyOS45MTgyIDk5LjUzODkgMzMuNTAwMUM5OS45NzczIDQzLjEwNSA5OS40MjIgNTYuNDA4NyA5NS4wMzUxIDY5LjM0NzZDOTguNjk0IDY5LjQ0NTcgMTAyLjk0OSA3MC4wOTI3IDEwNi44NDIgNzEuOTkxOUMxMTAuMzE4IDczLjY4NzggMTEzLjIzMiA3Ni4yNTMzIDExNS41MjYgNzguODE0MkMxMjEuMzgxIDU4LjQ3MzcgMTE0LjU3NiAzNi41Mjc4IDk4LjU2NDMgMjMuMDIzOUw5OC41NjYgMjMuMDIwM1pNNjkuNzk1OCA1Mi4xMzQ1Qzc2Ljk4OSA1NS42NDM2IDgyLjE4ODUgNjAuMzEyMSA4NS43MTI3IDY0LjMzNjhDOTEuNDQ1NyA0NS43MDc5IDg4Ljk0NjUgMjQuODYxMSA4Ni44NTk2IDE3LjE0MDNDNzkuNDkyMSAyMC4yNDg4IDYxLjUyNjEgMzEuMTExOCA1MC4zODI5IDQ3LjEwMTNDNTUuNzI4OCA0Ny4zOTk0IDYyLjYwNjEgNDguNjI3IDY5Ljc5NTggNTIuMTM0NVoiIGZpbGw9IiM0MTM3RkYiIHN0eWxlPSJmaWxsOiM0MTM3RkY7ZmlsbDpjb2xvcihkaXNwbGF5LXAzIDAuMjU0OSAwLjIxNTcgMS4wMDAwKTtmaWxsLW9wYWNpdHk6MTsiLz4KPC9zdmc+Cg==",
+};
+function logoHTML(c,white){
+  const co=COMPANIES[c]; if(!co)return"";
+  if(co.aa && AA[co.aa]) return `<span class="lg ok"><img src="${AA[co.aa]}" alt="" onerror="this.parentNode.classList.remove(\'ok\')"><i style="color:${co.color}">${co.ch}</i></span>`;
+  return `<span class="lg noimg" style="--lgc:${co.color};background:${co.color}"><i style="color:#fff">${co.ch}</i></span>`;
+}
+function vendorForName(nm){
+  const k=(nm||"").toLowerCase();
+  if(/mimo|mi-mo|mi mo/.test(k)) return "xiaomi";
+  if(/deepseek/.test(k)) return "deepseek";
+  if(/muse\s*spark|muse/i.test(k)) return "muse";
+  if(/tencent|hy\d|hunyuan/.test(k)) return "tencent";
+  if(/qwen|tongyi|千问/.test(k)) return "qwen";
+  if(/glm|z\.?ai|智谱/.test(k)) return "zai";
+  if(/gpt|openai|o1|o3|o4/.test(k)) return "openai";
+  if(/minimax/.test(k)) return "minimax";
+  if(/step/.test(k)) return "step";
+  if(/gemini|google/.test(k)) return "google";
+  if(/kimi|moonshot/.test(k)) return "kimi";
+  if(/inkling|thinking/i.test(k) && !/gpt|glm|qwen|kimi|deepseek|grok|gemini/.test(k)) return "inkling";
+  if(/nemotron|nvidia/.test(k)) return "nvidia";
+  if(/grok|xai/.test(k)) return "xai";
+  return "NEW";
+}
+const ORDER = ["xiaomi","deepseek","muse","tencent","qwen","zai","openai","minimax","step","google","kimi","inkling","nvidia","xai","laguna","meituan"];
+
+/* ================= i18n ================= */
+const I18N = {
+zh:{
+  docTitle:"模型能力 × opencode Go 可用次数", ibBadges:`<span class="ib-b">月费 <b>$10/月</b></span><span class="ib-b">5h 上限 <b>$12</b></span><span class="ib-b">每周 <b>$30</b></span><span class="ib-b">每月 <b>$60</b></span>`, eyebrow:"opencode Go 计划",
+  h1:"模型能力 × opencode Go 可用次数",
+  sub:"",
+  modelsN:d=>d+" 个模型", vendorsN:d=>" · "+d+" 家厂商",
+  langBtn:"EN", planGoat:"GOAT 计划", planGo:"Go 计划",
+  capMetric:"额度窗口", mH5:"每5小时", mWk:"每周", mMo:"每月",
+  capAxis:"坐标轴", mLog:"对数", mLin:"线性",
+  export:"导出 PNG",
+  clickFocus:"点击厂商可聚焦", reset:"重置",
+  dualZone:"高分 × 高额度区间",
+  xAxis:m=>m==="h5"?"opencode Go 每 5 小时可调用次数（对数轴）":m==="wk"?"opencode Go 每周可调用次数（对数轴）":"opencode Go 每月可调用次数（对数轴）",
+  xAxisLin:m=>m==="h5"?"opencode Go 每 5 小时可调用次数（线性轴）":m==="wk"?"opencode Go 每周可调用次数（线性轴）":"opencode Go 每月可调用次数（线性轴）",
+  yAxis:"智能指数 · AA 评测",
+  thIdx:"#", thModel:"模型", thVendor:"厂商", thH5:"每5小时", thWk:"每周", thMo:"每月",
+  thScore:"智能指数", thFront:"前沿", thDual:"双高",
+  cardFront:"帕累托前沿", seats:"席", inList:"在列",
+  cardTop:"全场最高分", cardDual:"双高之王", points:"分 · ", times:"次",
+  dualNote:"双高区里分数最高", cardQuota:"额度之王",
+  quotaNote:"Muse Spark 1.3 Contributor（59 分，额度也是全场最高）",
+  newVendor:"新加入 opencode Go",
+  pinned:"已钉住 ·", unpin:"✕",
+  ttPer:"每5小时可用次数", ttScore:"智能指数",
+  ttAbility:"能力", ttQuota:"额度", ttOf:"/",
+  bFront:"帕累托前沿", bPinned:"已钉住",
+  cmpOf:"对比 · 已钉住", cmpReq:"次数差", cmpScore:"分数差",
+  domA:"全面压制", domB:"互有胜负，看场景取舍",
+  syncCheck:"正在核对官方文档…", snap:d=>"快照 · "+d, syncOk:"✓ 已同步官方 · 数据为最新", syncAt:"最近同步：",
+  syncStruct:"核对失败：官方表格结构已变", syncOff:"网络不通 · 显示", snapshot:"快照",
+  syncGone:"已从官方移除", syncNew:"新模型：", syncPer:"次/5h",
+  syncUpdate:"一键更新到官方", lastCheck:"上次成功核对：",
+  nsLane:"暂无智能指数 · 额度沿横轴对比",
+  mmTag:"[多模态]",
+  priceCap:"官方价格与每月额度（每 1M tokens · USD）", pModel:"模型",
+  pIn:"输入", pOut:"输出", pCacheR:"缓存读入", pCacheW:"缓存写入", pCredits:"每月额度",
+  ttMo:"每月额度",
+  expFile:"模型能力×opencode-Go可用次数.png",
+  footSrc:`额度与价格来源：<a href="https://opencode.ai/docs/go" target="_blank" rel="noopener">opencode Go 官方文档</a> · 智能指数来源：<a href="https://artificialanalysis.ai/models" target="_blank" rel="noopener">Artificial Analysis</a> 评测结果`
+},
+en:{
+  docTitle:"Model Capability × opencode Go Allowance", ibBadges:`<span class="ib-b">Monthly <b>$10/mo</b></span><span class="ib-b">5h cap <b>$12</b></span><span class="ib-b">Weekly <b>$30</b></span><span class="ib-b">Monthly cap <b>$60</b></span>`, eyebrow:"OPENCODE GO PLAN",
+  h1:"Model Capability × opencode Go Allowance",
+  sub:"",
+  modelsN:d=>d+" models", vendorsN:d=>" · "+d+" vendors",
+  langBtn:"中文", planGoat:"GOAT Plan", planGo:"Go Plan",
+  capMetric:"WINDOW", mH5:"5-hour", mWk:"Weekly", mMo:"Monthly",
+  capAxis:"AXIS", mLog:"Log", mLin:"Linear",
+  export:"Export PNG",
+  clickFocus:"Click a vendor to focus", reset:"Reset",
+  dualZone:"HIGH SCORE × HIGH ALLOWANCE",
+  xAxis:m=>m==="h5"?"opencode Go requests per 5 hours (log scale)":m==="wk"?"opencode Go requests per week (log scale)":"opencode Go requests per month (log scale)",
+  xAxisLin:m=>m==="h5"?"opencode Go requests per 5 hours (linear scale)":m==="wk"?"opencode Go requests per week (linear scale)":"opencode Go requests per month (linear scale)",
+  yAxis:"Intelligence Index score · AA benchmark",
+  thIdx:"#", thModel:"Model", thVendor:"Vendor", thH5:"Per 5h", thWk:"Per week", thMo:"Per month",
+  thScore:"Intelligence Index", thFront:"Frontier", thDual:"Dual-high",
+  cardFront:"Pareto frontier", seats:" seats", inList:" on the line",
+  cardTop:"Top score", cardDual:"Dual-high king", points:" pts · ", times:" req",
+  dualNote:"highest score in the dual-high zone", cardQuota:"Allowance king",
+  quotaNote:"Muse Spark 1.3 Contributor (59 pts, also the largest allowance)",
+  newVendor:"Newly added to opencode Go",
+  pinned:"Pinned ·", unpin:"✕",
+  ttPer:"Requests per 5h", ttScore:"Intelligence Index",
+  ttAbility:"Score rank", ttQuota:"Allowance rank", ttOf:"/",
+  bFront:"Pareto frontier", bPinned:"Pinned",
+  cmpOf:"Compare vs pinned", cmpReq:"Request diff", cmpScore:"Score diff",
+  domA:"dominates", domB:"Trade-off — depends on the task",
+  syncCheck:"Checking official docs…", snap:d=>"Snapshot · "+d, syncOk:"✓ Synced with official docs", syncAt:"Last sync: ",
+  syncStruct:"Check failed: official table structure changed", syncOff:"Offline · showing ", snapshot:" snapshot",
+  syncGone:"removed from official docs", syncNew:"New model: ", syncPer:" req/5h",
+  syncUpdate:"Update from official", lastCheck:"Last successful check: ",
+  nsLane:"No Intelligence score yet — allowance on the same axis",
+  mmTag:"[Multimodal]",
+  priceCap:"Official pricing & monthly credits (per 1M tokens · USD)", pModel:"Model",
+  pIn:"Input", pOut:"Output", pCacheR:"Cache read-in", pCacheW:"Cache write-in", pCredits:"Monthly credits",
+  ttMo:"Monthly credits",
+  expFile:"model-capability-x-opencode-go-allowance.png",
+  footSrc:`Allowance & pricing: <a href="https://opencode.ai/docs/go" target="_blank" rel="noopener">opencode Go official docs</a> · Intelligence Index: <a href="https://artificialanalysis.ai/models" target="_blank" rel="noopener">Artificial Analysis</a> benchmark updates`
+}};
+let LANG = "zh";
+try{ LANG = localStorage.getItem("goLang") || "zh"; }catch(e){}
+const t = k => (I18N[LANG] && I18N[LANG][k]) || I18N.zh[k] || k;
+
+/* ================= derived（随额度窗口/数据更新重算） ================= */
+const METRICS={h5:{f:"req",zone:1000},wk:{f:"wk",zone:2500},mo:{f:"mo",zone:5000}};
+let METRIC="h5";
+let frontier=[], onP=new Set(), maxScore=0, maxReq=0, bestDual=null;
+const rankS={}, rankR={};
+function computeDerived(){
+  const f=METRICS[METRIC].f, zone=METRICS[METRIC].zone;
+  const rows=DATA.filter(d=>d[f]!=null&&d[f]>0);
+  frontier=[]; let mxc=-1;
+  [...rows].sort((a,b)=>b[f]-a[f]||(b.s||0)-(a.s||0)).forEach(d=>{ if(d.s!=null&&!d.inherited&&(d.s||0)>mxc){frontier.push(d); mxc=d.s||0;} });
+  onP=new Set(frontier.map(d=>d.n));
+  maxScore=Math.max(...DATA.map(d=>d.s||0));
+  maxReq=Math.max(...rows.map(d=>d[f]));
+  bestDual=DATA.filter(d=>d[f]>=zone&&d.s!=null&&d.s>=45).sort((a,b)=>b.s-a.s)[0]||null;
+  [...DATA].sort((a,b)=>(b.s||0)-(a.s||0)).forEach((d,i)=>{rankS[d.i]=d.s==null?0:i+1;});
+  [...rows].sort((a,b)=>b[f]-a[f]).forEach((d,i)=>{rankR[d.i]=i+1;});
+}
+computeDerived();
+const dual = d => { const m=METRICS[METRIC]; return d[m.f]!=null && d[m.f]>=m.zone && d.s!=null && d.s>=45; };
+const vf = d => d[METRICS[METRIC].f];
+const fmt = n => n.toLocaleString("en-US");
+const GEN_AT="2026-09-03";
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+const fmtPr=s=>{ if(s==null)return "—"; const x=String(s).trim(); return (x==="-"||x==="—"||x==="--")?"—":x; };
+const sfmt = n => (n>0?"+":"")+fmt(n);
+const hexA = (h,a)=>{const n=parseInt(h.slice(1),16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`;};
+const MM = ()=>` <span class="mm-tag">${t("mmTag")}</span>`;
+const vName = c => c==="NEW" ? t("newVendor") : (LANG==="zh" ? COMPANIES[c].name : (COMPANIES[c].nameEn || COMPANIES[c].name));
+
+/* ================= legend ================= */
+const active=new Set();
+const lb=document.getElementById("legendbar");
+function renderLegend(){
+  const cnt={}; DATA.forEach(d=>cnt[d.c]=(cnt[d.c]||0)+1);
+  lb.innerHTML = ORDER.filter(k=>cnt[k]>0).map(k=>`<span class="pill ${active.size&&!active.has(k)?"off":""}" data-k="${k}">
+      ${logoHTML(k,true)}${esc(vName(k))}
+      <span class="cnt">×${cnt[k]||0}</span></span>`).join("")
+    + (active.size?`<button class="reset show" id="resetBtn">${t("reset")}</button>`:`<span class="legend-hint">${t("clickFocus")}</span>`);
+}
+function applyFilter(){
+  const dim = !!active.size;
+  document.querySelectorAll(".ptg").forEach(g=>{
+    const d=DATA[+g.dataset.i]; if(!d)return;
+    const on = !dim||active.has(d.c);
+    g.classList.toggle("dimmed", !on);   // !important 类（压过 animation fill 锁定）
+    const v = on?1:.35;
+    g.style.opacity = v;
+    g.setAttribute("opacity", v);
+  });
+  document.querySelectorAll("#tbody tr").forEach(r=>{
+    const d=DATA[+r.dataset.i]; if(!d)return;
+    r.classList.toggle("dim2", dim&&!active.has(d.c));
+  });
+  document.querySelectorAll("#ptbody tr").forEach(r=>{   // 价格表同步聚焦
+    const d=DATA[+r.dataset.i]; if(!d)return;
+    r.classList.toggle("dim2", dim&&!active.has(d.c));
+  });
+}
+lb.addEventListener("click",e=>{
+  const p=e.target.closest(".pill");
+  if(p){
+    const k=p.dataset.k; if(!k)return;
+    active.has(k)?active.delete(k):active.add(k);
+    try{renderLegend(); applyFilter();}catch(err){console.warn("filter err",err);}
+  }
+  if(e.target.id==="resetBtn"){active.clear(); try{renderLegend(); applyFilter();}catch(err){console.warn(err);}}
+});
+
+/* ================= chart ================= */
+const W=1180,L=86,T=34,R=48,PW=W-L-R,PH=560;
+const YMIN=15,YMAX=55;
+const Y=s=>T+(YMAX-s)/(YMAX-YMIN)*PH;
+const R_PT=7;
+const LAB={
+ "Muse Spark 1.3 Contributor":[-8,14,"end"], "DUMMY-NEVER-MATCHES":[0,0,"middle"],
+ "Qwen 3.8 Flash":[-10,12,"end"], "DeepSeek V4 Flash":[-10,12,"end"], "DeepSeek V4 Flash (latest)":[-10,12,"end"], "DeepSeek V4 Flash Vision (exp)":[10,-10,"start"],
+ "Muse Spark 1.2 Contributor":[-10,-12,"end"], "MiMo V2.5":[-10,6,"end"]
+};
+let mode="log", firstDraw=true, svg=null, pinned=-1, LAST_H=760;
+function geom(m){
+  const f=METRICS[m].f;
+  const vals=DATA.map(d=>d[f]).filter(v=>v>0);
+  if(mode==="lin"){
+    const XMIN=0,XMAX=Math.max(...vals)*1.06;
+    const step=Math.pow(10,Math.floor(Math.log10(XMAX/5)));
+    const ticks=[]; for(let v=0;v<=XMAX+step;v+=step)ticks.push(v);
+    return {XMIN:0,XMAX,ticks,
+      X:v=>L+(v-XMIN)/(XMAX-XMIN)*PW,
+      xVal:px=>(px-L)/PW*(XMAX-XMIN),
+      tfmt:x=>x===0?"0":x>=1000?(x/1000)+"k":String(x)};
+  }
+  const XMIN=Math.min(...vals)*0.85, XMAX=Math.max(...vals)*1.12;
+  const L0=Math.log10(XMIN),L1=Math.log10(XMAX);
+  const cand=[100,200,300,500,1000,2000,3000,5000,10000,20000,30000,50000,100000];
+  const ticks=cand.filter(x=>x>=XMIN*0.9&&x<=XMAX);
+  return {XMIN,XMAX,ticks,
+    X:v=>L+(Math.log10(v)-L0)/(L1-L0)*PW,
+    xVal:px=>Math.pow(10,L0+(px-L)/PW*(L1-L0)),
+    tfmt:x=>x>=1000?(x/1000)+"k":String(x)};
+}
+function drawChart(){
+  const g=geom(METRIC), zone=METRICS[METRIC].zone;
+  const lane=DATA.filter(d=>d.s==null&&vf(d)!=null);
+  const laneH=lane.length?76:0;
+  const S=[];
+  const H=T+PH+laneH+46; LAST_H=H;
+  S.push(`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"${firstDraw?"":' class="noanim"'}>`);
+  S.push(`<defs>
+    <pattern id="micro" width="26" height="26" patternUnits="userSpaceOnUse"><circle cx="1.2" cy="1.2" r="1.1" fill="#e7e2d6"/></pattern>
+    <clipPath id="reveal"><rect class="rev" x="${L}" y="${T-2}" width="${PW}" height="${PH+4}"/></clipPath>
+  </defs>`);
+  S.push(`<rect class="fadein" x="${L}" y="${T}" width="${PW}" height="${PH+laneH}" fill="url(#micro)"/>`);
+
+  for(const x of g.ticks)S.push(`<line x1="${g.X(x)}" y1="${T}" x2="${g.X(x)}" y2="${T+PH}" stroke="#eee9df"/>`);
+  for(let gy=15;gy<=55;gy+=5)S.push(`<line x1="${L}" y1="${Y(gy)}" x2="${L+PW}" y2="${Y(gy)}" stroke="#eee9df"/>`);
+  S.push(`<rect x="${L}" y="${T}" width="${PW}" height="${PH+laneH}" fill="none" stroke="#ddd6c9" rx="10"/>`);
+  const fAsc=[...frontier].reverse();
+  S.push(`<g clip-path="url(#reveal)"><polyline points="${fAsc.map(d=>g.X(vf(d))+","+Y(d.s)).join(" ")}"
+    fill="none" stroke="#2f2f33" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.1 8.5" opacity=".82"/></g>`);
+  for(const x of g.ticks)
+    S.push(`<text class="tick" x="${g.X(x)}" y="${T+PH+24}" text-anchor="middle">${g.tfmt(x)}</text>`);
+  for(let v=20;v<=55;v+=5)
+    S.push(`<text class="tick" x="${L-12}" y="${Y(v)+4.5}" text-anchor="end">${v}</text>`);
+  S.push(`<text class="axis-t" x="${L+PW/2}" y="${T+PH+laneH+34}" text-anchor="middle">${mode==="log"?t("xAxis")(METRIC):t("xAxisLin")(METRIC)}</text>`);
+  S.push(`<text class="axis-t" x="26" y="${T+PH/2}" text-anchor="middle" transform="rotate(-90 26 ${T+PH/2})">${t("yAxis")}</text>`);
+  // 无分数滑槽：绘图区底边向下延长一块，清晰分界线隔开有分/无分，icon 沿同一横轴滑动对比次数
+  const laneY=T+PH+54;
+  if(lane.length){
+    // 与绘图区同底纹、同外框，只以一条温和灰线分界
+    S.push(`<line x1="${L}" y1="${T+PH}" x2="${L+PW}" y2="${T+PH}" stroke="#b9b2a2" stroke-width="1.2"/>`);
+    lane.forEach(d=>{
+      const cx=Math.max(L+12, Math.min(L+PW-12, g.X(vf(d))));
+      S.push(`<g class="ptg ns" data-i="${d.i}">
+        <line x1="${cx}" y1="${T+PH}" x2="${cx}" y2="${laneY-12}" stroke="#c9c2b2" stroke-width="1"/>
+        <circle cx="${cx}" cy="${T+PH}" r="2.4" fill="#6d685e" opacity=".55"/>
+        <foreignObject x="${cx-9}" y="${laneY-9}" width="18" height="18">${logoHTML(d.c)}</foreignObject>
+        <circle class="pt" data-i="${d.i}" cx="${cx}" cy="${laneY}" r="13" fill="transparent"/>
+      </g>`);
+    });
+  }
+  DATA.forEach((d,i)=>{
+    if(d.req==null||d.s==null)return;
+    const cx=g.X(vf(d)), cy=d.s==null?Y(YMIN):Y(d.s);
+    S.push(`<g class="ptg${d.i===pinned?" pin":""}" data-i="${i}" style="animation-delay:${(i*16+300)}ms">
+      <circle class="oring" cx="${cx}" cy="${cy}" r="10.5"/>
+      <foreignObject x="${cx-9}" y="${cy-9}" width="18" height="18">${logoHTML(d.c)}</foreignObject>
+      <circle class="pt" data-i="${i}" cx="${cx}" cy="${cy}" r="13" fill="transparent"/>
+    </g>`);
+  });
+  // 标签跟随当前帕累托前沿，保证 每5小时/每周/每月 三档统一显示（有环即有字，无环即无字）
+  frontier.filter(d=>d.n && !d.n.includes("${")).forEach(d=>{
+    let lb2=LAB[d.n];
+    let dx,dy,a;
+    if(lb2){ [dx,dy,a]=lb2; }
+    else {
+      // 未在 LAB 预设的前沿成员，自动摆在点上方，底部低分点摆下方，靠边时自动翻锚点防溢出
+      dy = (d.s!=null && d.s<35) ? 12 : -12;
+      dx = 0; a="middle";
+      const cx=g.X(vf(d));
+      if(cx > L+PW-90){ a="end"; dx=-8; }
+      else if(cx < L+90){ a="start"; dx=8; }
+    }
+    S.push(`<text class="lab" x="${g.X(vf(d))+dx}" y="${(d.s==null?Y(YMIN):Y(d.s))+dy}" text-anchor="${a}">${esc(d.n)}</text>`);
+  });
+  S.push(`<g class="xhair" id="xh" style="display:none">
+    <line id="xhV" y1="${T}" y2="${T+PH}" stroke="#b9b2a2" stroke-dasharray="3 4"/>
+    <line id="xhH" x1="${L}" x2="${L+PW}" stroke="#b9b2a2" stroke-dasharray="3 4"/>
+    <g id="xc"><rect class="chipbox" rx="4" height="18"/><text class="chiptxt" text-anchor="middle"></text></g>
+    <g id="yc"><rect class="chipbox" rx="4" height="18"/><text class="chiptxt" text-anchor="middle"></text></g>
+  </g>`);
+  S.push(`</svg>`);
+  document.getElementById("chart").innerHTML=S.join("");
+  svg=document.querySelector("#chart svg");
+}
+
+/* ================= pin & compare ================= */
+const pchip=document.getElementById("pchip");
+function renderPin(){
+  pchip.classList.toggle("show", pinned>=0);
+  if(pinned>=0){const d=DATA[pinned];
+    pchip.innerHTML=`${t("pinned")} <b>${esc(d.n)}</b> <button id="unpin" title="unpin">${t("unpin")}</button>`;}
+}
+function setPin(i){
+  pinned = (pinned===i)? -1 : i;
+  if(svg)svg.querySelectorAll(".ptg").forEach(g=>g.classList.toggle("pin",+g.dataset.i===pinned));
+  document.querySelectorAll("#tbody tr").forEach(r=>r.classList.toggle("pinrow",+r.dataset.i===pinned));
+  renderPin();
+}
+pchip.addEventListener("click",e=>{ if(e.target.id==="unpin") setPin(pinned); });
+
+/* ================= tooltip ================= */
+const tt=document.getElementById("tt");
+function cmpBlock(d){
+  if(pinned<0||pinned===d.i)return"";
+  const p=DATA[pinned];
+  const dR=vf(d)-vf(p), dS=d.s-p.s;
+  const dom = (vf(d)>=vf(p)&&d.s>=p.s)?`${esc(d.n)} ${t("domA")} ${esc(p.n)}`
+    : (vf(p)>=vf(d)&&p.s>=d.s)?`${esc(p.n)} ${t("domA")} ${esc(d.n)}`
+    : t("domB");
+  return `<div class="cmp"><div class="cmp-t">${t("cmpOf")} ${esc(p.n)}</div>
+    <div class="row"><span>${t("cmpReq")}</span><b class="${dR>=0?"up":"dn"}">${sfmt(dR)}</b></div>
+    <div class="row"><span>${t("cmpScore")}</span><b class="${dS>=0?"up":"dn"}">${sfmt(dS)}</b></div>
+    <div class="cmpnote">${dom}</div></div>`;
+}
+function showTT(d,e){
+  const nm=esc(d.n)+(d.mm?MM():"");
+  tt.innerHTML=`<div class="ttname">${logoHTML(d.c,true)}${nm}</div>
+    <div class="ttven">${esc(vName(d.c))} · ${t("ttAbility")} ${rankS[d.i]?"#"+rankS[d.i]:"—"}/${DATA.length} · ${t("ttQuota")} ${rankR[d.i]?"#"+rankR[d.i]:"—"}/${DATA.length}</div>
+    <div class="row"><span>${METRIC==="h5"?t("ttPer"):METRIC==="wk"?(LANG==="zh"?"每周可用次数":"Requests per week"):(LANG==="zh"?"每月可用次数":"Requests per month")}</span><b>${vf(d)!=null?fmt(vf(d)):"—"}</b></div>
+    <div class="bar"><i style="width:${vf(d)!=null?(vf(d)/maxReq*100).toFixed(1):0}%;background:${COMPANIES[d.c].color}"></i></div>
+    <div class="row"><span>${t("ttScore")}</span><b>${d.s==null?"—":d.s}</b></div>
+    <div class="row"><span>${t("ttMo")}</span><b>${d.pr?esc(fmtPr(d.pr[4])):"—"}</b></div>
+    <div class="bar"><i style="width:${d.s!=null?(d.s/60*100).toFixed(1):0}%;background:#7fd6a2"></i></div>
+    <div class="badges">${onP.has(d.n)?`<span class="bdg gold">${t("bFront")}</span>`:""}${d.i===pinned?`<span class="bdg gold">${t("bPinned")}</span>`:""}</div>
+    ${cmpBlock(d)}`;
+  tt.style.display="block"; moveTT(e);
+}
+function moveTT(e){
+  const wd=278, ht=tt.offsetHeight||170;
+  let x=e.clientX+16, y=e.clientY+14;
+  if(x+wd>innerWidth-8) x=e.clientX-wd-14;
+  if(y+ht>innerHeight-8) y=e.clientY-ht-12;
+  tt.style.left=x+"px"; tt.style.top=y+"px";
+}
+const hideTT=()=>{tt.style.display="none";};
+function hl(i,on){
+  if(svg)svg.querySelector(`.ptg[data-i="${i}"]`)?.classList.toggle("hl",on);
+  document.querySelector(`#tbody tr[data-i="${i}"]`)?.classList.toggle("hl",on);
+}
+function chip(g,x,y,txt){
+  const r=g.querySelector("rect"),tx=g.querySelector("text");
+  const w=txt.length*7+14;
+  r.setAttribute("x",x-w/2); r.setAttribute("y",y-9); r.setAttribute("width",w);
+  tx.setAttribute("x",x); tx.setAttribute("y",y+4); tx.textContent=txt;
+}
+function bindSvg(){
+  svg.addEventListener("click",e=>{
+    const c=e.target.closest("circle.pt"); if(c) setPin(+c.dataset.i);
+  });
+  svg.addEventListener("mouseover",e=>{
+    const c=e.target.closest("circle.pt"); if(!c)return;
+    showTT(DATA[+c.dataset.i],e); hl(+c.dataset.i,true);
+  });
+  svg.addEventListener("mouseleave",()=>{document.getElementById("xh").style.display="none";});
+  svg.addEventListener("mousemove",e=>{
+    const c=e.target.closest("circle.pt");
+    if(c){moveTT(e); return;}
+    const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+    const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+    const inPlot = p.x>=L&&p.x<=L+PW&&p.y>=T&&p.y<=T+PH;
+    const xh=document.getElementById("xh");
+    xh.style.display = inPlot?"":"none";
+    if(!inPlot)return;
+    const g=geom(METRIC);
+    document.getElementById("xhV").setAttribute("x1",p.x);
+    document.getElementById("xhV").setAttribute("x2",p.x);
+    document.getElementById("xhH").setAttribute("y1",p.y);
+    document.getElementById("xhH").setAttribute("y2",p.y);
+    chip(document.getElementById("xc"),p.x,T+PH+12,fmt(Math.round(g.xVal(p.x))));
+    chip(document.getElementById("yc"),L-14,p.y,String(Math.round(YMAX-(p.y-T)/PH*(YMAX-YMIN))));
+  });
+  svg.addEventListener("mouseout",e=>{
+    const c=e.target.closest("circle.pt");
+    if(c){hideTT(); hl(+c.dataset.i,false);}
+  });
+}
+
+/* ================= controls ================= */
+function renderSegs(){
+  document.querySelectorAll("#segMetric button").forEach(b=>{
+    b.textContent = t("m"+b.dataset.m[0].toUpperCase()+b.dataset.m.slice(1).replace("h5","H5"));
+    b.classList.toggle("on", b.dataset.m===METRIC);
+  });
+  document.querySelectorAll("#segAxis button").forEach(b=>{
+    b.textContent = t(b.dataset.m==="log"?"mLog":"mLin");
+    b.classList.toggle("on", b.dataset.m===mode);
+  });
+  document.getElementById("capMetric").textContent=t("capMetric");
+  document.getElementById("capAxis").textContent=t("capAxis");
+  document.getElementById("btnExport").textContent=t("export");
+}
+document.getElementById("segMetric").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b||b.dataset.m===METRIC)return;
+  METRIC=b.dataset.m; renderSegs(); computeDerived(); renderTable(); drawChart(); applyFilter(); bindSvg();
+});
+document.getElementById("segAxis").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b||b.dataset.m===mode)return;
+  mode=b.dataset.m; renderSegs(); drawChart(); applyFilter(); bindSvg();
+});
+
+/* ================= export ================= */
+const SVGCSS = `text{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;}
+.tick{font-size:12.5px;fill:#a39d90;}.axis-t{font-size:13.5px;fill:#6d685e;letter-spacing:.05em;}
+.lab{font-size:12.5px;fill:#3f3b33;font-weight:600;paint-order:stroke;stroke:#ffffff;stroke-width:3.5px;}
+.qlab{font-size:13px;fill:#15803d;font-weight:700;letter-spacing:.06em;paint-order:stroke;stroke:#e8f7ee;stroke-width:4px;}
+circle.pt{stroke:transparent;stroke-width:16;}.oring{fill:none;stroke:none;}.frontring{fill:none;stroke:#d9a441;stroke-width:2;opacity:.85;}
+*{animation:none!important;transition:none!important;}`;
+function exportPNG(test){
+  const clone=svg.cloneNode(true);
+  clone.querySelectorAll(".xhair").forEach(n=>n.remove());
+  clone.querySelectorAll("g.ptg foreignObject").forEach(fo=>fo.remove());
+  clone.querySelectorAll("g.ptg").forEach(g=>{
+    const d=DATA[+g.dataset.i]; if(!d)return;
+    const c=g.querySelector("circle.pt"); if(!c)return;
+    const cx=+c.getAttribute("cx"), cy=+c.getAttribute("cy");
+    const co=COMPANIES[d.c];
+    const url=co.aa?AA[co.aa]:null;
+    if(url){
+      const img=document.createElementNS("http://www.w3.org/2000/svg","image");
+      img.setAttribute("x",cx-9); img.setAttribute("y",cy-9);
+      img.setAttribute("width","18"); img.setAttribute("height","18");
+      img.setAttribute("href",url);
+      g.insertBefore(img,c);
+    }else{
+      const dot=document.createElementNS("http://www.w3.org/2000/svg","circle");
+      dot.setAttribute("cx",cx); dot.setAttribute("cy",cy);
+      dot.setAttribute("r",9); dot.setAttribute("fill",co.color);
+      g.insertBefore(dot,c);
+    }
+  });
+  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+  clone.setAttribute("width",W*2); clone.setAttribute("height",LAST_H*2);
+  const st=document.createElementNS("http://www.w3.org/2000/svg","style");
+  st.textContent=SVGCSS; clone.insertBefore(st,clone.firstChild);
+  const xml=new XMLSerializer().serializeToString(clone);
+  const url=URL.createObjectURL(new Blob([xml],{type:"image/svg+xml;charset=utf-8"}));
+  const img=new Image();
+  img.onload=()=>{
+    const c=document.createElement("canvas"); c.width=W*2; c.height=LAST_H*2;
+    const ctx=c.getContext("2d");
+    ctx.fillStyle="#f7f5f1"; ctx.fillRect(0,0,c.width,c.height);
+    ctx.drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(url);
+    c.toBlob(b=>{
+      if(test){
+        const fr=new FileReader();
+        fr.onload=()=>{document.body.insertAdjacentHTML("beforeend",
+          `<div id="export-ok">${fr.result}</div>`);};
+        fr.readAsDataURL(b);
+      }else{
+        const a=document.createElement("a");
+        a.href=URL.createObjectURL(b); a.download=t("expFile"); a.click();
+        setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+      }
+    },"image/png");
+  };
+  img.src=url;
+}
+document.getElementById("btnExport").addEventListener("click",()=>exportPNG(false));
+
+/* ================= table ================= */
+let sortKey="req", sortDir=1;
+function renderTableHead(){
+  document.getElementById("thead").innerHTML=`<tr>
+    <th>${t("thModel")}</th>
+    <th class="num sortable" data-key="req" id="th-h5">${t("thH5")}<span class="arr"></span></th>
+    <th class="num sortable" data-key="wk" id="th-wk">${t("thWk")}<span class="arr"></span></th>
+    <th class="num sortable" data-key="mo" id="th-mo">${t("thMo")}<span class="arr"></span></th>
+    <th class="num sortable" data-key="s">${t("thScore")}<span class="arr"></span></th>
+    <th style="text-align:center">${t("thFront")}</th>
+  </tr>`;
+  ["h5","wk","mo"].forEach(w=>{const el=document.getElementById("th-"+w); if(el)el.classList.toggle("active-col",METRIC===w);});
+  syncArr();
+}
+function syncArr(){
+  const ths=document.querySelectorAll("#thead th[data-key]");
+  ths.forEach(th=>{
+    const k=th.dataset.key, arr=th.querySelector(".arr");
+    if(!arr)return;
+    if(k==="idx") arr.textContent = sortKey==="idx"?"▲":"";
+    else arr.textContent = sortKey===k?(sortDir===1?"▼":"▲"):"";
+  });
+}
+function _numVal(v){ return v==null||isNaN(v) ? -Infinity : Number(v); }
+function renderTable(){
+  let rows=DATA.filter(d=>d.req!=null);   // 次数表=官方次数表全量（Cache-First 同步）
+  if(sortKey!=="idx") rows.sort((a,b)=>_numVal(b[sortKey])-_numVal(a[sortKey]));
+  else rows.sort((a,b)=>a.i-b.i);
+  if(sortKey!=="idx"&&sortDir===-1) rows.reverse();
+  document.getElementById("tbody").innerHTML=rows.map(d=>{
+    const nm=esc(d.n)+(d.mm?MM():"");
+    return `<tr data-i="${d.i}" class="${d.i===pinned?"pinrow":""}">
+    <td>${logoHTML(d.c)}${nm}</td>
+    <td class="num"><b>${d.req!=null?fmt(d.req):"—"}</b></td>
+    <td class="num">${d.wk?fmt(d.wk):"—"}</td>
+    <td class="num">${d.mo?fmt(d.mo):"—"}</td>
+    <td class="num"><b>${d.s==null?"—":d.s}</b></td>
+    <td style="text-align:center">${onP.has(d.n)?'<span class="mk">✓</span>':'<span class="mkno">—</span>'}</td>
+  </tr>`;}).join("");
+  syncArr(); applyFilter();
+}
+document.getElementById("thead").addEventListener("click",e=>{
+  const th=e.target.closest("th.sortable"); if(!th)return;
+  const k=th.dataset.key;
+  if(k==="idx"){sortKey="idx";}
+  else if(sortKey===k){sortDir=-sortDir;} else {sortKey=k; sortDir=1;}
+  renderTable();
+});
+document.getElementById("tbody").addEventListener("mouseover",e=>{const r=e.target.closest("tr"); if(r?.dataset.i)hl(+r.dataset.i,true);});
+document.getElementById("tbody").addEventListener("mouseout",e=>{const r=e.target.closest("tr"); if(r?.dataset.i)hl(+r.dataset.i,false);});
+
+/* ================= price table ================= */
+let pSortKey="req", pSortDir=1;
+function _pNum(s){ const v=parseFloat(String(s||"").replace(/[$,]/g,"")); return isNaN(v)?-Infinity:v; }
+function _pRowsSorted(){
+  const key=pSortKey;
+  const withPr=DATA.filter(d=>d.pr);
+  if(key==="credits") return withPr.sort((a,b)=>_pNum((b.pr&&b.pr[4])||"")-_pNum((a.pr&&a.pr[4])||""));
+  if(key==="pr0"||key==="pr1"||key==="pr2"||key==="pr3"){
+    const idx={pr0:0,pr1:1,pr2:2,pr3:3}[key];
+    return withPr.sort((a,b)=>_pNum((b.pr&&b.pr[idx])||"—")-_pNum((a.pr&&a.pr[idx])||"—"));
+  }
+  if(key==="req") return withPr.sort((a,b)=>Number(b.req||0)-Number(a.req||0));
+  return withPr;
+}
+function _fmtCtx(c){ return c?`<span class="ctx">${esc(c)}</span>`:""; }
+function _tierRows(d){
+  if(!d.tiers||d.tiers.length<=1) return [{ctx:"",pr:d.pr,tier:null}];
+  return d.tiers.map(tr=>({ctx:tr.c,pr:[`$${tr.in}`,`$${tr.out}`,(tr.cr==null||!String(tr.cr).trim()||String(tr.cr).trim()==="-"||String(tr.cr).trim()==="—")?"—":`$${tr.cr}`,(tr.cw==null||!String(tr.cw).trim()||String(tr.cw).trim()==="-"||String(tr.cw).trim()==="—")?"—":`$${tr.cw}`,d.pr[4]],tier:tr}));
+}
+function renderPrices(){
+  document.getElementById("priceCap").textContent=t("priceCap");
+  const arrFor=k=>pSortKey===k?(pSortDir===1?"▼":"▲"):"";
+  document.getElementById("pthead").innerHTML=`<tr>
+    <th>${t("pModel")}</th>
+    <th class="num sortable" data-pkey="pr0">${t("pIn")}<span class="arr">${arrFor("pr0")}</span></th>
+    <th class="num sortable" data-pkey="pr1">${t("pOut")}<span class="arr">${arrFor("pr1")}</span></th>
+    <th class="num sortable" data-pkey="pr2">${t("pCacheR")}<span class="arr">${arrFor("pr2")}</span></th>
+    <th class="num sortable" data-pkey="pr3">${t("pCacheW")}<span class="arr">${arrFor("pr3")}</span></th>
+    <th class="num sortable" data-pkey="credits">${t("pCredits")}<span class="arr">${arrFor("credits")}</span></th>
+  </tr>`;
+  let rows=_pRowsSorted();
+  if(pSortDir===-1) rows=rows.slice().reverse();
+  document.getElementById("ptbody").innerHTML=rows.map(d=>{
+    if(!d.pr)return"";
+    const credit=d.pr[4], cnum=parseFloat(credit.replace(/[$,]/g,""))||0;
+    const pillCls=cnum>=60?"pr-pill":cnum<=20?"pr-pill gold":"pr-pill";
+    const trs=_tierRows(d);
+    if(trs.length===1){
+      return `<tr data-i="${d.i}">
+    <td>${logoHTML(d.c)}${esc(d.n)}${d.mm?MM():""}</td>
+    <td class="num">${esc(fmtPr(trs[0].pr[0]))}</td><td class="num">${esc(fmtPr(trs[0].pr[1]))}</td>
+    <td class="num">${esc(fmtPr(trs[0].pr[2]))}</td><td class="num">${esc(fmtPr(trs[0].pr[3]))}</td>
+    <td class="num"><span class="${pillCls}">${esc(credit)}</span></td>
+  </tr>`;
+    }
+    return trs.map((r,i)=>`<tr data-i="${d.i}" class="${i>0?"tier-sub":"tier-first"}">
+    <td>${i===0?logoHTML(d.c)+esc(d.n)+(d.mm?MM():"")+" "+_fmtCtx(r.ctx):`<span class="tier-ctx">${_fmtCtx(r.ctx)}</span>`}</td>
+    <td class="num">${esc(fmtPr(r.pr[0]))}</td><td class="num">${esc(fmtPr(r.pr[1]))}</td>
+    <td class="num">${esc(fmtPr(r.pr[2]))}</td><td class="num">${esc(fmtPr(r.pr[3]))}</td>
+    <td class="num">${i===0?`<span class="${pillCls}">${esc(credit)}</span>`:""}</td>
+  </tr>`).join("");
+  }).join("");
+  document.querySelectorAll("#ptbody tr").forEach(r=>{
+    r.addEventListener("mouseover",()=>{const d=DATA[+r.dataset.i]; if(d){hl(d.i,true);}});
+    r.addEventListener("mouseout",()=>{const d=DATA[+r.dataset.i]; if(d){hl(d.i,false);}});
+  });
+}
+document.getElementById("pthead").addEventListener("click",e=>{
+  const th=e.target.closest("th.sortable"); if(!th)return;
+  const k=th.dataset.pkey;
+  if(pSortKey===k) pSortDir=-pSortDir; else { pSortKey=k; pSortDir=1; }
+  renderPrices();
+});
+
+/* ================= lang ================= */
+function applyLang(){
+  document.title=t("docTitle");
+  document.getElementById("eyebrow").textContent=t("eyebrow");
+  document.getElementById("ibBadges").innerHTML=t("ibBadges")||"";
+  const brands=new Set(DATA.map(d=>d.c));
+  document.getElementById("metaPill").textContent=t("modelsN")(DATA.length)+t("vendorsN")(brands.size);
+  document.getElementById("langBtn").textContent=t("langBtn");
+  const xsG=document.getElementById("xsGoat"), xsO=document.getElementById("xsGo");
+  if(xsG)xsG.textContent=t("planGoat");
+  if(xsO)xsO.textContent=t("planGo");
+  renderLegend(); renderSegs(); renderTableHead(); renderTable(); renderPrices(); renderPin(); renderSync();
+  const footEl=document.getElementById("foot"); if(footEl)footEl.innerHTML=t("footSrc");
+  drawChart(); bindSvg(); applyFilter();
+}
+document.getElementById("langBtn").addEventListener("click",()=>{
+  LANG = LANG==="zh" ? "en" : "zh";
+  try{localStorage.setItem("goLang",LANG);}catch(e){}
+  applyLang();
+});
+</script>
+<script>
+/* ================= GOAT 官方文档自动核对 ================= */
+const DOC_URL="https://opencode.ai/docs/go/";
+let SYNC={state:"idle"};
+const store={get:()=>{try{return JSON.parse(localStorage.getItem("goSnap")||"null")}catch(e){return null}},
+             set:s=>{try{localStorage.setItem("goSnap",JSON.stringify(s))}catch(e){}}};
+const PATCH_KEY="goPatches";
+function savePatch(patch){ try{const all=JSON.parse(localStorage.getItem(PATCH_KEY)||"{}"); if(patch.add===undefined)patch.add=false; all[patch.n]=patch; localStorage.setItem(PATCH_KEY,JSON.stringify(all));}catch(e){} }
+function applyStoredPatches(){
+  try{
+    const all=JSON.parse(localStorage.getItem(PATCH_KEY)||"{}");
+    Object.values(all).forEach(p=>{
+      let d=DATA.find(d=>nameEq(d.n,p.n));
+      if(!d && p.add){
+        // news 持久化行：重建后走同一条继承管线
+        d={n:p.n,req:p.req!=null?p.req:null,s:null,c:p.c||"NEW",
+           pr:p.pr||null,wk:p.wk||0,mo:p.mo||0,i:DATA.length};
+        DATA.push(d);
+        if(!ORDER.includes(d.c))ORDER.push(d.c);
+      }else if(!d){return;}
+      if(p.req!=null&&d.req!=null)d.req=p.req;
+      if(p.wk!=null)d.wk=p.wk;
+      if(p.mo!=null)d.mo=p.mo;
+      if(p.pr)d.pr=p.pr;
+    });
+  }catch(e){}
+}
+function parseDoc(html){
+  const i=html.indexOf("Requests / 5 hours"); if(i<0)return null;
+  const seg=html.slice(Math.max(0,i-2000), i+40000);
+  const est={}; const rowRe=/<tr[^>]*>([\s\S]*?)<\/tr>/g; let m;
+  while((m=rowRe.exec(seg))){
+    const cellRe=/<td[^>]*>([\s\S]*?)<\/td>/g; const cells=[]; let c;
+    while((c=cellRe.exec(m[1])))cells.push(c[1].replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim());
+    if(cells.length<4)continue;
+    const nums=cells.slice(1,4).map(x=>x.replace(/,/g,"").trim());
+    if(!nums.every(x=>/^\d+$/.test(x)))continue;
+    if(cells[0]&&!(cells[0] in est))est[cells[0]]=nums.map(Number);
+  }
+  // 模型表顺序：最新加入排最上
+  let j=html.indexOf("Every model below is included");
+  const order=[];
+  if(j>=0){
+    let end=html.indexOf('id="usage-limits"', j); if(end<0)end=j+150000;
+    const seg2=html.slice(j, end);
+    const row2=/<tr[^>]*>([\s\S]*?)<\/tr>/g; let m2;
+    while((m2=row2.exec(seg2))){
+      const a=/<a[^>]*>([\s\S]*?)<\/a>/.exec(m2[1]);
+      if(!a)continue;
+      const nm=a[1].replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim();
+      if(nm&&!order.includes(nm))order.push(nm);
+    }
+  }
+  let ci=html.indexOf("Monthly credits");
+  const cr={};
+  while(ci>=0){
+    const seg3=html.slice(ci, ci+20000);
+    const row3=/<tr[^>]*>([\s\S]*?)<\/tr>/g; let m3;
+    while((m3=row3.exec(seg3))){
+      const cell3=/<td[^>]*>([\s\S]*?)<\/td>/g; const cs=[]; let c3;
+      while((c3=cell3.exec(m3[1])))cs.push(c3[1].replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim());
+      if(cs.length<6)continue;
+      const name3=cs[0];
+      if(!name3||/^[\$\d]/.test(name3))continue;
+      const money=cs.slice(1,6).map(x=>/^[-—]$|^[-—]?[\$\d,.]+$/.test(x)?x:null);
+      if(money.every(x=>x!==null)&&!(name3 in cr))cr[name3]=money;
+    }
+    const ci2=html.indexOf("Monthly credits", ci+10);
+    if(ci2<0||ci2-ci>60000)break;
+    ci=ci2;
+  }
+  return Object.keys(est).length?{est,order,cr}:null;
+}
+const nameEq=(a,b)=>a.replace(/\s+/g," ").toLowerCase()===b.replace(/\s+/g," ").toLowerCase();
+function renderSync(){
+  const st=document.getElementById("sync");
+  const set=(h,cls)=>{st.innerHTML=h; st.className="syncpill "+(cls||"");};
+  if(SYNC.state==="busy")return set(t("syncCheck"),"busy");
+  if(SYNC.state==="ok")return set(t("syncOk"),"ok");
+  if(SYNC.state==="err"){
+    let h=t("syncOff")+" "+GEN_AT+" "+t("snapshot");
+    const cached=store.get();
+    if(cached)h+=` <span title="${t("lastCheck")} ${new Date(cached.t).toLocaleString(LANG==="zh"?"zh-CN":"en-US")}">⏱</span>`;
+    return set(h,"err");
+  }
+  if(SYNC.state==="warn"){
+    let h="";
+    if(SYNC.diffs.length)h+=SYNC.diffs.map(x=>x.type==="chg"
+      ?(x.onlyCr
+        ?`<span class="syncitem">${esc(x.n)}：${LANG==="zh"?"价格/额度有调整":"pricing/credits changed"}</span>`
+        :`<span class="syncitem">${esc(x.n)}：${fmt(x.old)} → <b>${fmt(x.now)}</b></span>`)
+      :`<span class="syncitem">${esc(x.n)} ${t("syncGone")}</span>`).join("");
+        if(SYNC.news.length)h+=SYNC.news.map(x=>`<span class="syncitem">${t("syncNew")}${esc(x.n)}${x.req!=null?" · "+fmt(x.req)+t("syncPer"):(LANG==="zh"?"（暂无额度数据）":" (no allowance data yet)")}</span>`).join("");
+    return set(h+`<button class="syncbtn" id="syncGoat">${t("syncUpdate")}</button>`,"warn");
+  }
+  set(t("snap")(GEN_AT),"");
+}
+/* ===== Cache-First: 服务器缓存 data.json 是唯一数据源 ===== */
+let ADMIN_TOKEN = "";
+try{ const m=location.search.match(/[?&]admin=([A-Za-z0-9_-]+)/); if(m)ADMIN_TOKEN=m[1]; }catch(e){}
+const IS_ADMIN = () => !!ADMIN_TOKEN;
+const API_BASE = "/plan/api/";
+const CACHE_URL = "/go/data.json";
+
+const NO_INHERIT=["Qwen 3.8 Max 0902","Hy4 preview","Tencent Hy4 Preview","Qwen 3.7 Flash","Laguna S 2.1","Qwen 3.6 Max Preview"];
+function variantInherit(){
+  DATA.forEach(d=>{
+    if(d.s==null && d.c!=="NEW" && !NO_INHERIT.includes(d.n)){
+      const base=d.n.replace(/\s*(Fast|HighSpeed|Contributor)\s*$/i,"").trim().replace(/\s+\d{4}$/,"").trim();
+      const baseStripped=base.replace(/\s*\(latest\)|\s*\(exp\)/gi,"").trim();
+      let twin=DATA.find(o=>o!==d && o.s!=null &&
+        (nameEq(o.n,base)||nameEq(o.n,baseStripped)||nameEq(o.n.replace(/\s*\(latest\)|\s*\(exp\)/gi,"").trim(),baseStripped)));
+      if(!twin && d.n==="DeepSeek V4 Flash Fast"){ twin=DATA.find(o=>o.n==="DeepSeek V4 Flash (latest)"&&o.s!=null)||DATA.find(o=>o.s!=null&&/deepseek.*flash/i.test(o.n)); }
+      if(twin){ d.s=twin.s; d.inherited=twin.n; }
+    }
+  });
+}
+function applyServerData(doc){
+  if(!doc||!doc.est)return false;
+  const pos={}; (doc.order||[]).forEach((n,i)=>{ if(pos[n.toLowerCase()]===undefined)pos[n.toLowerCase()]=i; });
+  (doc.order||[]).forEach(k=>{
+    if(DATA.some(d=>nameEq(k,d.n)))return;
+    const hit=Object.keys(doc.est).find(k2=>nameEq(k2,k));
+    const crk=doc.cr&&Object.keys(doc.cr).find(k2=>nameEq(k2,k));
+    const vc=typeof vendorForName==="function"?vendorForName(k):"NEW";
+    DATA.push({n:k,req:hit?doc.est[hit][0]:null,s:null,c:vc,
+      pr:crk?doc.cr[crk]:null,wk:hit?doc.est[hit][1]:0,mo:hit?doc.est[hit][2]:0,i:DATA.length});
+    if(!ORDER.includes(vc))ORDER.push(vc);
+  });
+  DATA.forEach(d=>{
+    const hit=Object.keys(doc.est).find(k=>nameEq(k,d.n));
+    if(hit&&d.req!=null){
+      d.req=doc.est[hit][0]; d.wk=doc.est[hit][1]; d.mo=doc.est[hit][2];
+    }
+    const crk=doc.cr&&Object.keys(doc.cr).find(k=>nameEq(k,d.n));
+    if(crk)d.pr=doc.cr[crk];
+    if(d.c==="NEW"){ const vc=vendorForName(d.n); if(vc!=="NEW")d.c=vc; }
+  });
+  // AA agentic 分数合并（fetch_go 抓取）；新分数进来的不进帕累托前沿的老逻辑保持不变
+  const sc=doc.scores||{};
+  DATA.forEach(d=>{
+    const k=Object.keys(sc).find(k=>nameEq(k,d.n));
+    if(k&&sc[k]!=null)d.s=sc[k];
+  });
+  variantInherit();
+  return true;
+}
+async function loadServerCache(){
+  try{
+    const r=await fetch(CACHE_URL+"?t="+Date.now(), {cache:"no-store"});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const doc=await r.json();
+    if(applyServerData(doc)){
+      computeDerived(); applyLang();
+      const st=document.getElementById("sync");
+      if(st){
+        SYNC={state:"ok"};
+        st.innerHTML=t("syncOk")+` <span class="synctime">${t("syncAt")}${esc(doc.updated||"—")}</span>`;
+        st.className="syncpill ok";
+      }
+      return true;
+    }
+  }catch(e){ console.warn("cache load failed:", e); }
+  return false;
+}
+/* 管理员一键同步：POST 到服务器鉴权端点，成功后重新拉缓存 */
+async function adminSync(){
+  const st=document.getElementById("sync");
+  const set=(h,cls)=>{st.innerHTML=h; st.className="syncpill "+(cls||"");};
+  set(t("syncCheck"),"busy");
+  try{
+    const r=await fetch("/plan/api/sync", {method:"POST", headers:{"X-Token":ADMIN_TOKEN}});
+    const j=await r.json();
+    if(r.status===403){ set(LANG==="zh"?"无权限 / forbidden":"forbidden","err"); return false; }
+    if(!j.ok){ set((LANG==="zh"?"同步失败: ":"sync failed: ")+(j.output||j.error||"?").slice(-120),"err"); return false; }
+    SYNC={state:"ok"};
+    set(LANG==="zh"?"✓ 已同步官方 · 数据为最新":"✓ Synced with official docs","ok");
+    await loadServerCache();
+    // loadServerCache 为非管理员才会覆写胶囊；管理员保持 ok 态，避免 applyLang → renderSync 因 SYNC 仍为 idle 而清空
+    SYNC={state:"ok"};
+    return true;
+  }catch(e){
+    set((LANG==="zh"?"同步失败: ":"sync failed: ")+e,"err"); return false;
+  }
+}
+
+function checkOfficial(silent){
+  /* Cache-First：浏览器绝不直接请求官方接口。管理员按钮由 boot 段注入。 */
+  if(!IS_ADMIN())return;
+  SYNC={state:"admin"}; renderSync();
+}
+function renderAdminPill(){
+  const st=document.getElementById("sync");
+  if(!IS_ADMIN()){return;}
+  st.className="syncpill";
+  st.innerHTML=`<span class="syncitem">管理员模式</span><button class="syncbtn" id="syncGoat">${t("syncUpdate")}</button>`;
+}
+document.addEventListener("click",async e=>{
+  if(e.target.id!=="syncGoat")return;
+  const ok=await adminSync();
+  if(ok){computeDerived();applyLang();}
+});
+function checkOfficial_old(silent){
+  SYNC={state:"busy"}; renderSync();
+  fetch(DOC_URL+"?t="+Date.now(),{cache:"no-store"}).then(r=>{
+    if(!r.ok)throw new Error("HTTP "+r.status); return r.text();
+  }).then(html=>{
+    const doc=parseDoc(html);
+    if(!doc){SYNC={state:"err"}; renderSync(); return;}
+    store.set({t:Date.now()});
+    const pos={}; doc.order.forEach((n,i)=>{ if(pos[n]===undefined)pos[n.toLowerCase()]=i; });
+    const knownPos=DATA.map(d=>{
+      const k=Object.keys(pos).find(k2=>nameEq(k2,d.n)||k2===d.n.toLowerCase());
+      return k!==undefined?pos[k]:null;
+    }).filter(v=>v!==null);
+    const minKnown=knownPos.length?Math.min(...knownPos):0;
+    const diffs=[],news=[];
+    DATA.forEach(d=>{
+      const hit=Object.keys(doc.est).find(k=>nameEq(k,d.n));
+      if(!hit){diffs.push({n:d.n,type:"gone"});return;}
+      const crHit=doc.cr&&Object.keys(doc.cr).find(k=>nameEq(k,d.n));
+      const oldCr=crHit?doc.cr[crHit]:null;
+      const reqChanged=doc.est[hit][0]!==d.req;
+      const priceChanged=!!(d.pr&&oldCr&&(oldCr[0]!==d.pr[0]||oldCr[1]!==d.pr[1]||oldCr[4]!==d.pr[4]));
+      if(reqChanged||priceChanged)
+        diffs.push({n:d.n,type:"chg",old:d.req,now:doc.est[hit][0],cr:oldCr,onlyCr:!reqChanged});
+    });
+    doc.order.forEach(k=>{
+      if(DATA.some(d=>nameEq(k,d.n)))return;
+      const p=Object.keys(pos).find(k2=>nameEq(k2,k)||k2===k.toLowerCase());
+      const hasQuota=!!Object.keys(doc.est).find(k2=>nameEq(k2,k));
+      // 两条触发线：①排位高于所有已知（最新加入）②有额度估算但完全不在本地（变体/新档位）
+      if(!(p!==undefined && pos[p]<minKnown) && !(hasQuota && p!==undefined))return;
+      const hit=Object.keys(doc.est).find(k2=>nameEq(k2,k));
+      const crHit2=doc.cr&&Object.keys(doc.cr).find(k2=>nameEq(k2,k));
+      news.push({n:k,req:hit?doc.est[hit][0]:null,cr:crHit2?doc.cr[crHit2]:null});
+    });
+    window.__goatDiffs=diffs; window.__goatNews=news; window.__goatDoc=doc;
+    if(!diffs.length&&!news.length){SYNC={state:"ok"}; renderSync(); return;}
+    SYNC={state:"warn",diffs,news}; renderSync();
+  }).catch(()=>{
+    SYNC={state:"err"}; renderSync();
+  });
+}
+document.addEventListener("click",e=>{
+  if(e.target.id!=="syncGoat")return;
+  const diffs=window.__goatDiffs||[], news=window.__goatNews||[], doc=window.__goatDoc;
+  if(!doc)return;
+  diffs.forEach(x=>{
+    const d=DATA.find(d=>nameEq(d.n,x.n)); if(!d)return;
+    if(x.type==="chg"){
+      const hit=Object.keys(doc.est).find(k=>nameEq(k,x.n));
+      if(hit){d.wk=doc.est[hit][1];d.mo=doc.est[hit][2];}
+      d.req=hit?doc.est[hit][0]:x.now;
+      if(x.cr)d.pr=x.cr;
+      savePatch({n:d.n,req:d.req,wk:d.wk,mo:d.mo,pr:d.pr});
+    }
+  });
+  news.forEach(x=>{
+    const hit=Object.keys(doc.est).find(k=>nameEq(k,x.n));
+    const hasQ=!!hit;
+    const vc=vendorForName(x.n);
+    const row={n:x.n,req:hasQ?x.req:null,s:null,c:vc,pr:x.cr||null,
+      wk:hasQ?doc.est[hit][1]:0,mo:hasQ?doc.est[hit][2]:0,i:DATA.length};
+    if(hasQ){row.wk=doc.est[hit][1];row.mo=doc.est[hit][2];}
+    DATA.push(row);
+    savePatch(row);
+  });
+  pinned=-1;
+  if(!ORDER.includes("NEW"))ORDER.push("NEW");
+  DATA.forEach(d=>{
+    if(d.c==="NEW"){
+      const vc=vendorForName(d.n);
+      if(vc!=="NEW"){ d.c=vc; }
+    }
+  });
+  // Speed 变体（官方文档："Speed variants are separate models with their own credits"，
+  // 且记分列 not yet scored）——继承基础模型的 Intelligence 分数，图/表按同能力处理
+  DATA.forEach(d=>{
+    if(d.s==null && d.c!=="NEW"){
+      const base=d.n.replace(/\s*(Fast|HighSpeed|Contributor)\s*$/i,"").trim();
+      const baseStripped=base.replace(/\s*\(latest\)|\s*\(exp\)/gi,"").trim();
+      let twin=DATA.find(o=>o!==d && o.s!=null &&
+        (nameEq(o.n,base)||nameEq(o.n,baseStripped)||nameEq(o.n.replace(/\s*\(latest\)|\s*\(exp\)/gi,"").trim(),baseStripped)));
+      if(!twin && d.n==="DeepSeek V4 Flash Fast"){ twin=DATA.find(o=>o.n==="DeepSeek V4 Flash (latest)"&&o.s!=null)||DATA.find(o=>o.s!=null&&/deepseek.*flash/i.test(o.n)); }
+      if(twin){ d.s=twin.s; d.inherited=twin.n; }
+    }
+  });
+  computeDerived();
+  applyLang();
+  checkOfficial(true);
+});
+
+/* ================= boot ================= */
+const HB=location.hash.slice(1);
+const HBs=HB.split(",");
+if(HBs.includes("lin"))mode="lin";
+if(HBs.includes("wk"))METRIC="wk";
+if(HBs.includes("mo"))METRIC="mo";
+if(HBs.includes("en"))LANG="en";
+renderSegs();
+applyStoredPatches();
+variantInherit();
+computeDerived();
+renderTableHead();
+applyLang();
+const PM=HB.match(/pin=(\d+)/); if(PM) setPin(+PM[1]);
+if(HBs.includes("export-test")){ setTimeout(()=>exportPNG(true), 400); }
+if(HBs.includes("hovertest")){ setTimeout(()=>{
+  const c=svg.querySelector('.ptg[data-i="7"] circle.pt');
+  const r=c.getBoundingClientRect();
+  const el=document.elementFromPoint(r.x+r.width/2, r.y+r.height/2);
+  const d=document.createElement("div"); d.id="hover-test-result";
+  d.textContent=(el===c)?"HOVER-HIT-OK":"HOVER-MISS:"+(el?(el.id||el.tagName):"null");
+  document.body.appendChild(d);
+  c.dispatchEvent(new MouseEvent("mouseover",{clientX:r.x+r.width/2,clientY:r.y+r.height/2,bubbles:true}));
+  setTimeout(()=>{ const tp=document.getElementById("tt");
+    const d2=document.createElement("div"); d2.id="tooltip-test-result";
+    d2.textContent="TOOLTIP:"+(tp.style.display==="block"?"SHOWN":"HIDDEN")+":"+(tp.textContent||"").slice(0,30);
+    document.body.appendChild(d2); },120);
+},800); }
+if(HBs.includes("syncdbg")){
+  setTimeout(()=>{document.body.insertAdjacentHTML("beforeend",
+    '<div id="syncdbg-result">CACHE:'+(DATA.length)+'rows;ADMIN:'+(IS_ADMIN()?"yes":"no")+'</div>');},2500);
+}
+/* Cache-First boot：先吃服务器缓存（本地开发 file:// 时回退静态数据，不报错） */
+if(location.protocol==="https:"||location.protocol==="http:"){
+  loadServerCache().then(()=>{ if(IS_ADMIN())renderAdminPill(); });
+}else if(IS_ADMIN()){
+  renderAdminPill();
+}
+</script>
+</body>
+</html>
